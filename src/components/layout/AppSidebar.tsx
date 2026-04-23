@@ -45,7 +45,7 @@ export function AppSidebar({ open, onClose }: Props) {
       />
 
       <aside
-        className={`fixed inset-y-0 start-0 z-50 flex h-dvh w-[min(100%,17rem)] shrink-0 flex-col border-e border-slate-200/80 bg-white shadow-xl shadow-slate-200/50 transition-transform duration-200 ease-out lg:static lg:z-0 lg:w-[17rem] lg:translate-x-0 lg:border-s-0 lg:border-e lg:shadow-none ${mobileSlide}`}
+        className={`fixed inset-y-0 start-0 z-50 flex h-dvh w-[min(100%,14rem)] shrink-0 flex-col border-e border-slate-200/80 bg-white shadow-xl shadow-slate-200/50 transition-transform duration-200 ease-out lg:static lg:z-0 lg:w-56 lg:translate-x-0 lg:border-s-0 lg:border-e lg:shadow-none ${mobileSlide}`}
         aria-label="التنقل الرئيسي"
       >
         <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-4">

@@ -5,6 +5,10 @@ import { DashboardPage } from "../pages/DashboardPage";
 import { LoginPage } from "../pages/LoginPage";
 import { MembersPage } from "../pages/MembersPage";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
+import AccountTypePage from "../pages/AccountTypePage";
+import GeneralAccountPage from "../pages/GeneralAccountPage";
+import BabPage from "../pages/BabPage";
+import BandPage from "../pages/BandPage";
 
 const ph = (title: string, description: string) => (
   <PlaceholderPage title={title} description={description} />
@@ -116,31 +120,31 @@ export const router = createBrowserRouter([
         path: "administrative_management/job_nature",
         element: ph("أنواع الوظائف", "------"),
       },
-            {
+      {
         path: "administrative_management/job_category",
         element: ph("الفئات الوظيفة", "------"),
       },
-           {
+      {
         path: "administrative_management/job_grade",
         element: ph("الدرجات الوظيفة", "------"),
       },
-           {
+      {
         path: "administrative_management/job_title",
         element: ph("المسميات الوظيفية", "------"),
       },
-                 {
+      {
         path: "administrative_management/employees_basic_salaries",
         element: ph("الرواتب الأساسية للموظفين", "------"),
       },
-                 {
+      {
         path: "administrative_management/contractors_basic_salaries",
         element: ph("الرواتب الأساسية للمتعاقدين", "------"),
       },
-                 {
+      {
         path: "administrative_management/experts_basic_salaries",
         element: ph("مكافأت الخبراء", "------"),
       },
-                 {
+      {
         path: "administrative_management/allowances",
         element: ph("البدلات", "------"),
       },
@@ -192,7 +196,19 @@ export const router = createBrowserRouter([
       },
       {
         path: "settings/account_type",
-        element: ph("تصنيف الحسابات", "------"),
+        element: <AccountTypePage />,
+      },
+      {
+        path: "settings/general_account/:id?",
+        element: <GeneralAccountPage />,
+      },
+      {
+        path: "settings/bab/:id?",
+        element: <BabPage />,
+      },
+      {
+        path: "settings/band/:id?",
+        element: <BandPage />,
       },
       {
         path: "settings/world_regions",
@@ -254,10 +270,6 @@ export const router = createBrowserRouter([
         path: "settings/gender",
         element: ph("النوع", "------"),
       },
-      // {
-      //   path: "settings",
-      //   element: ph("الإعدادات", "الشركة، الصلاحيات، والتكاملات."),
-      // },
     ],
   },
 ]);
