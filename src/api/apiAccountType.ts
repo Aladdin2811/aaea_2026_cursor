@@ -3,12 +3,12 @@ import { supabase } from "../lib/supabase";
 export type AccountTypeRow = {
   id: number;
   account_type_name: string | null;
-  status: string | null;
+  status: boolean | null;
 };
 
 export type CreateAccountTypeInput = {
   account_type_name: string;
-  status?: string | null;
+  status?: boolean | null;
 };
 
 export type UpdateAccountTypeInput = Partial<

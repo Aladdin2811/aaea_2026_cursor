@@ -30,7 +30,7 @@ export type BandRow = {
   directexchange: boolean | null;
   salariesdirectpaid: boolean | null;
   band_journal_show: boolean | null;
-  status: string | null;
+  status: boolean | null;
 };
 
 export type BandWithRelations = BandRow & {
@@ -58,7 +58,10 @@ const selectBandEmbed = `
   bab ( id, bab_name, bab_code )
 `;
 
-function parseNumericId(value: number | string, fieldLabel = "المعرّف"): number {
+function parseNumericId(
+  value: number | string,
+  fieldLabel = "المعرّف",
+): number {
   const n = typeof value === "string" ? Number(value) : value;
   if (typeof n !== "number" || !Number.isFinite(n)) {
     throw new Error(`${fieldLabel} غير صالح`);
@@ -106,9 +109,7 @@ export async function getForSelect(
   return (data as unknown as BandWithRelations[] | null) ?? [];
 }
 
-export async function getById(
-  id: number | string,
-): Promise<BandWithRelations> {
+export async function getById(id: number | string): Promise<BandWithRelations> {
   const rowId = parseNumericId(id, "رقم البند");
 
   const { data, error } = await supabase
@@ -154,10 +155,8 @@ export async function getBandRevenues(filterArray: JournalFilter[]): Promise<{
     throw new Error("البند غير موجود");
   }
 
-  let query = supabase
-    .from("journal_details")
-    .select(
-      `
+  let query = supabase.from("journal_details").select(
+    `
     band_id,
     year_id,
     journal_main_id,
@@ -166,7 +165,7 @@ export async function getBandRevenues(filterArray: JournalFilter[]): Promise<{
     dollars_debit,
     dollars_credit
   `,
-    );
+  );
 
   for (const f of filterArray) {
     query = query.eq(f.field, f.value as string | number | boolean);
@@ -178,19 +177,19 @@ export async function getBandRevenues(filterArray: JournalFilter[]): Promise<{
     throw new Error("لا يمكن الحصول على بيانات الإيرادات");
   }
 
-  const list = (data as unknown as Array<{
-    dollars_credit: number | null;
-    dollars_debit: number | null;
-    closing_entry: { closing_entry?: boolean } | null;
-  }> | null) ?? [];
+  const list =
+    (data as unknown as Array<{
+      dollars_credit: number | null;
+      dollars_debit: number | null;
+      closing_entry: { closing_entry?: boolean } | null;
+    }> | null) ?? [];
 
   const filteredData = list.filter(
     (row) => !row.closing_entry || row.closing_entry.closing_entry !== true,
   );
 
   const totalRevenues = filteredData.reduce(
-    (acc, row) =>
-      acc + (row.dollars_credit || 0) - (row.dollars_debit || 0),
+    (acc, row) => acc + (row.dollars_credit || 0) - (row.dollars_debit || 0),
     0,
   );
 
@@ -257,13 +256,14 @@ export async function getBandProjectsContributions(
     throw new Error("لا يمكن الحصول على بيانات المساهمات في مشروعات");
   }
 
-  const list = (data as unknown as Array<{
-    band_id: number;
-    year_id: number | null;
-    dollars_credit: number | null;
-    dollars_debit: number | null;
-    closing_entry: { closing_entry?: boolean } | null;
-  }> | null) ?? [];
+  const list =
+    (data as unknown as Array<{
+      band_id: number;
+      year_id: number | null;
+      dollars_credit: number | null;
+      dollars_debit: number | null;
+      closing_entry: { closing_entry?: boolean } | null;
+    }> | null) ?? [];
 
   const filteredData = list.filter(
     (row) => !row.closing_entry || row.closing_entry.closing_entry !== true,

@@ -1,28 +1,80 @@
-import { FileSpreadsheet, TrendingDown, TrendingUp } from 'lucide-react'
+import { FileSpreadsheet, TrendingDown, TrendingUp } from "lucide-react";
 
-const stats = [
+const contributionsStats = [
   {
-    label: 'إيرادات الشهر',
-    value: '—',
-    hint: 'سنربطها بالبيانات لاحقاً',
+    label: "مساهمات الدول الأعضاء عن السنة المالية الجارية",
+    value: "—",
+    hint: "سنربطها بالبيانات لاحقاً",
     icon: TrendingUp,
-    tone: 'from-emerald-500/90 to-teal-600',
+    tone: "from-emerald-500/90 to-teal-600",
   },
   {
-    label: 'المصروفات',
-    value: '—',
-    hint: 'مؤشرات سريعة وواضحة',
+    label: "مساهمات الدول الأعضاء عن سنوات مالية سابقة",
+    value: "—",
+    hint: "مؤشرات سريعة وواضحة",
     icon: TrendingDown,
-    tone: 'from-slate-700 to-slate-900',
+    tone: "from-slate-700 to-slate-900",
   },
   {
-    label: 'الفواتير المعلّقة',
-    value: '—',
-    hint: 'متابعة دورة التحصيل',
+    label: "الموازنة الإضافية لسنة 2010",
+    value: "—",
+    hint: "متابعة دورة التحصيل",
     icon: FileSpreadsheet,
-    tone: 'from-amber-500 to-orange-600',
+    tone: "from-amber-500 to-orange-600",
   },
-]
+];
+
+const SelfResourcesStats = [
+  {
+    label: "الخدمات والأنشطة المقدمة للغير",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: TrendingUp,
+    // tone: "from-emerald-500/90 to-teal-600",
+  },
+  {
+    label: "حاصل بيع النشرات والكتب",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: TrendingDown,
+    // tone: "from-slate-700 to-slate-900",
+  },
+  {
+    label: "عوائد الإستثمار",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: FileSpreadsheet,
+    // tone: "from-amber-500 to-orange-600",
+  },
+  {
+    label: "عوائد الودائع",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: FileSpreadsheet,
+    // tone: "from-amber-500 to-orange-600",
+  },
+  {
+    label: "عوائد الإيجارات",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: FileSpreadsheet,
+    // tone: "from-amber-500 to-orange-600",
+  },
+  {
+    label: "فرق سعر العملة",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: FileSpreadsheet,
+    // tone: "from-amber-500 to-orange-600",
+  },
+  {
+    label: "موارد أخرى متنوعة",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: FileSpreadsheet,
+    // tone: "from-amber-500 to-orange-600",
+  },
+];
 
 export function DashboardPage() {
   return (
@@ -55,7 +107,7 @@ export function DashboardPage() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map(({ label, value, hint, icon: Icon, tone }) => (
+        {contributionsStats.map(({ label, value, hint, icon: Icon, tone }) => (
           <article
             key={label}
             className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/40 transition hover:-translate-y-0.5 hover:shadow-md"
@@ -69,7 +121,33 @@ export function DashboardPage() {
             <p className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
               {value}
             </p>
-            <p className="mt-2 text-xs leading-relaxed text-slate-500">{hint}</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500">
+              {hint}
+            </p>
+          </article>
+        ))}
+      </section>
+
+      <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+        {SelfResourcesStats.map(({ label, value }) => (
+          <article
+            key={label}
+            className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm shadow-slate-200/40 transition hover:-translate-y-0.5 hover:shadow-md sm:p-3.5"
+          >
+            {/* <div
+              className={`mb-2 inline-flex size-8 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-md sm:size-9 ${tone}`}
+            >
+              <Icon className="size-4" strokeWidth={1.75} />
+            </div> */}
+            <p className="text-[0.7rem] font-medium leading-snug text-slate-500 sm:text-xs">
+              {label}
+            </p>
+            <p className="mt-0.5 text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
+              {value}
+            </p>
+            {/* <p className="mt-1 text-[0.65rem] leading-relaxed text-slate-500 sm:text-xs">
+              {hint}
+            </p> */}
           </article>
         ))}
       </section>
@@ -77,16 +155,18 @@ export function DashboardPage() {
       <section className="grid gap-4 lg:grid-cols-5">
         <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm lg:col-span-3">
           <div className="flex items-center justify-between gap-3">
-            <h3 className="text-base font-semibold text-slate-900">آخر النشاط</h3>
+            <h3 className="text-base font-semibold text-slate-900">
+              آخر النشاط
+            </h3>
             <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
               تجريبي
             </span>
           </div>
           <ul className="mt-4 divide-y divide-slate-100">
             {[
-              'تم إنشاء مسودة تقرير شهري',
-              'تذكير: مراجعة حركة الخزينة',
-              'طلب شراء بانتظار الاعتماد',
+              "تم إنشاء مسودة تقرير شهري",
+              "تذكير: مراجعة حركة الخزينة",
+              "طلب شراء بانتظار الاعتماد",
             ].map((item) => (
               <li
                 key={item}
@@ -100,7 +180,9 @@ export function DashboardPage() {
         </div>
 
         <div className="rounded-2xl border border-dashed border-emerald-200/80 bg-emerald-50/40 p-5 lg:col-span-2">
-          <h3 className="text-base font-semibold text-emerald-900">ماذا بعد؟</h3>
+          <h3 className="text-base font-semibold text-emerald-900">
+            ماذا بعد؟
+          </h3>
           <p className="mt-2 text-sm leading-relaxed text-emerald-900/80">
             اختر الوحدة التالية لنبنيها معاً: المحاسبة، الخزينة، الموارد
             البشرية، أو المخزون. كل صفحة ستُضاف هنا بنفس أسلوب التصميم.
@@ -108,5 +190,5 @@ export function DashboardPage() {
         </div>
       </section>
     </div>
-  )
+  );
 }

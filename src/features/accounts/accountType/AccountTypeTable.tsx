@@ -75,6 +75,7 @@ export default function AccountTypeTable() {
         onRowClick={(row) => {
           navigate(`/settings/general_account/${row.id}`);
         }}
+        rowClassName={() => "cursor-pointer"}
       />
     </div>
   );

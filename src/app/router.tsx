@@ -5,10 +5,30 @@ import { DashboardPage } from "../pages/DashboardPage";
 import { LoginPage } from "../pages/LoginPage";
 import { MembersPage } from "../pages/MembersPage";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
-import AccountTypePage from "../pages/AccountTypePage";
-import GeneralAccountPage from "../pages/GeneralAccountPage";
-import BabPage from "../pages/BabPage";
-import BandPage from "../pages/BandPage";
+import AccountTypePage from "../pages/accounts/AccountTypePage";
+import GeneralAccountPage from "../pages/accounts/GeneralAccountPage";
+import BabPage from "../pages/accounts/BabPage";
+import BandPage from "../pages/accounts/BandPage";
+import No3Page from "../pages/accounts/No3Page";
+import DetailedPage from "../pages/accounts/DetailedPage";
+import YearsPage from "../pages/years/YearsPage";
+import CurrentYearPage from "../pages/years/CurrentYearPage";
+import MonthsPage from "../pages/months/MonthsPage";
+import WorldRegionsPage from "../pages/world/WorldRegionsPage";
+import WorldClassificationsPage from "../pages/world/WorldClassificationsPage";
+import WorldCountriesPage from "../pages/world/WorldCountriesPage";
+import FundingTypePage from "../pages/fundingType/FundingTypePage";
+import DocumentTypePage from "../pages/documentType/DocumentTypePage";
+import ExchangeDocumentTypePage from "../pages/exchangeDocumentType/ExchangeDocumentTypePage";
+import ExchangeRatesPage from "../pages/exchangeRates/ExchangeRatesPage";
+import CurrencyPage from "../pages/currency/CurrencyPage";
+import RolesPage from "../pages/roles/RolesPage";
+import SocialSituationsPage from "../pages/socialSituations/SocialSituationsPage";
+import ExpatriatePage from "../pages/expatriate/ExpatriatePage";
+import GenderPage from "../pages/gender/GenderPage";
+import JobsPage from "../pages/jobs/JobsPage";
+import BasicSalariesPage from "../pages/salaries/BasicSalariesPage";
+import AllowancesPage from "../pages/allowances/AllowancesPage";
 
 const ph = (title: string, description: string) => (
   <PlaceholderPage title={title} description={description} />
@@ -117,36 +137,36 @@ export const router = createBrowserRouter([
       },
 
       {
-        path: "administrative_management/job_nature",
-        element: ph("أنواع الوظائف", "------"),
+        path: "administrative_management/jobs",
+        element: <JobsPage />,
       },
+      // {
+      //   path: "administrative_management/job_category",
+      //   element: ph("الفئات الوظيفة", "------"),
+      // },
+      // {
+      //   path: "administrative_management/job_grade",
+      //   element: ph("الدرجات الوظيفة", "------"),
+      // },
+      // {
+      //   path: "administrative_management/job_title",
+      //   element: ph("المسميات الوظيفية", "------"),
+      // },
       {
-        path: "administrative_management/job_category",
-        element: ph("الفئات الوظيفة", "------"),
+        path: "administrative_management/basic_salaries",
+        element: <BasicSalariesPage />,
       },
+      // {
+      //   path: "administrative_management/contractors_basic_salaries",
+      //   element: ph("الرواتب الأساسية للمتعاقدين", "------"),
+      // },
+      // {
+      //   path: "administrative_management/experts_basic_salaries",
+      //   element: ph("مكافأت الخبراء", "------"),
+      // },
       {
-        path: "administrative_management/job_grade",
-        element: ph("الدرجات الوظيفة", "------"),
-      },
-      {
-        path: "administrative_management/job_title",
-        element: ph("المسميات الوظيفية", "------"),
-      },
-      {
-        path: "administrative_management/employees_basic_salaries",
-        element: ph("الرواتب الأساسية للموظفين", "------"),
-      },
-      {
-        path: "administrative_management/contractors_basic_salaries",
-        element: ph("الرواتب الأساسية للمتعاقدين", "------"),
-      },
-      {
-        path: "administrative_management/experts_basic_salaries",
-        element: ph("مكافأت الخبراء", "------"),
-      },
-      {
-        path: "administrative_management/allowances",
-        element: ph("البدلات", "------"),
+        path: "administrative_management/AllowancesPage",
+        element: <AllowancesPage />,
       },
 
       {
@@ -192,7 +212,7 @@ export const router = createBrowserRouter([
 
       {
         path: "settings/current_year",
-        element: ph("العام المالي الحالي", "------"),
+        element: <CurrentYearPage />,
       },
       {
         path: "settings/account_type",
@@ -211,44 +231,56 @@ export const router = createBrowserRouter([
         element: <BandPage />,
       },
       {
+        path: "settings/no3/:id?",
+        element: <No3Page />,
+      },
+      {
+        path: "settings/detailed/:id?",
+        element: <DetailedPage />,
+      },
+      {
+        path: "programs/activities/:detailedId",
+        element: ph("عرض الأنشطة", "أنشطة البرامج المرتبطة بالحساب التفصيلي."),
+      },
+      {
         path: "settings/world_regions",
-        element: ph("تصنيف مناطق العالم", "------"),
+        element: <WorldRegionsPage />,
       },
       {
         path: "settings/world_classifications",
-        element: ph("تصنيف دول العالم", "------"),
+        element: <WorldClassificationsPage />,
       },
       {
         path: "settings/world_countries",
-        element: ph("دول العالم", "------"),
+        element: <WorldCountriesPage />,
       },
       {
         path: "settings/years",
-        element: ph("السنوات", "------"),
+        element: <YearsPage />,
       },
       {
         path: "settings/months",
-        element: ph("الشهور", "------"),
+        element: <MonthsPage />,
       },
       {
         path: "settings/funding_type",
-        element: ph("مصادر التمويل", "------"),
+        element: <FundingTypePage />,
       },
       {
         path: "settings/document_type",
-        element: ph("أنواع القيود", "------"),
+        element: <DocumentTypePage />,
       },
       {
         path: "settings/exchange_document_type",
-        element: ph("أنواع مستند الصرف", "------"),
+        element: <ExchangeDocumentTypePage />,
       },
       {
-        path: "settings/exchange_rates",
-        element: ph("أسعار الصرف", "------"),
+        path: "settings/exchange_rates/:id?",
+        element: <ExchangeRatesPage />,
       },
       {
         path: "settings/currency",
-        element: ph("العملات المتعامل بها", "------"),
+        element: <CurrencyPage />,
       },
       {
         path: "settings/users",
@@ -256,19 +288,19 @@ export const router = createBrowserRouter([
       },
       {
         path: "settings/roles",
-        element: ph("الصلاحيات", "------"),
+        element: <RolesPage />,
       },
       {
         path: "settings/social_situations",
-        element: ph("الأوضاع الإجتماعية", "------"),
+        element: <SocialSituationsPage />,
       },
       {
         path: "settings/expatriate",
-        element: ph("الإغتراب", "------"),
+        element: <ExpatriatePage />,
       },
       {
         path: "settings/gender",
-        element: ph("النوع", "------"),
+        element: <GenderPage />,
       },
     ],
   },

@@ -21,7 +21,7 @@ import { useFetchBab } from "./useBab";
 const columns: DataTableColumn<BabWithRelations>[] = [
   {
     id: "name",
-    header: "الباب",
+    header: "إسم الباب",
     cell: (row) => (
       <span className="min-w-0 font-medium text-slate-900">
         {formatOptionalText(row.bab_name)}
@@ -188,9 +188,12 @@ export default function BabTable() {
         onRowClick={(row) => {
           const ga = row.general_account_id;
           const q =
-            ga != null && String(ga) !== "" ? `?ga=${encodeURIComponent(String(ga))}` : "";
+            ga != null && String(ga) !== ""
+              ? `?ga=${encodeURIComponent(String(ga))}`
+              : "";
           navigate(`/settings/band/${row.id}${q}`);
         }}
+        rowClassName={() => "cursor-pointer"}
       />
     </div>
   );

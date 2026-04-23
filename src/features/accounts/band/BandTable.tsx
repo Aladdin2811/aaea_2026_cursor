@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { type BandWithRelations } from "../../../api/apiBand";
 import {
   DataTable,
@@ -25,19 +25,50 @@ function ColHead({
   );
 }
 
-const columns: DataTableColumn<BandWithRelations>[] = [
+/** صف يفتح جدول الأنواع: حالة فعّالة وبدون صرف مباشر */
+function isBandRowLinkedToNo3(row: BandWithRelations): boolean {
+  return row.status === true && row.directexchange === false;
+}
+
+function bandRowNo3To(
+  row: BandWithRelations,
+  babId: string | undefined,
+): string | null {
+  if (!isBandRowLinkedToNo3(row)) return null;
+  const qs =
+    babId != null && babId !== ""
+      ? `?bab=${encodeURIComponent(babId)}`
+      : "";
+  return `/settings/no3/${row.id}${qs}`;
+}
+
+function buildBandColumns(
+  babId: string | undefined,
+): DataTableColumn<BandWithRelations>[] {
+  return [
   {
     id: "name",
-    header: "البند",
+    header: "إسم البند",
     className: "min-w-50",
     thClassName: "!whitespace-normal",
     cell: (row) => {
       const name = stringValue(row.band_name);
       const shown = name.trim() === "" ? "—" : name;
-      return (
+      const label = (
         <span className="block min-w-0 whitespace-normal break-words font-medium leading-snug text-slate-900">
           {shown}
         </span>
+      );
+      const to = bandRowNo3To(row, babId);
+      if (to == null) return label;
+      return (
+        <Link
+          to={to}
+          className="block min-w-0 text-inherit no-underline visited:no-underline outline-none hover:no-underline focus-visible:no-underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {label}
+        </Link>
       );
     },
     getSortValue: (r) => stringValue(r.band_name),
@@ -176,8 +207,13 @@ const columns: DataTableColumn<BandWithRelations>[] = [
     getSortValue: (r) => stringValue(r.description),
   },
 ];
+}
 
-function Toolbar({ generalAccountId }: { generalAccountId: string | null }): ReactNode {
+function Toolbar({
+  generalAccountId,
+}: {
+  generalAccountId: string | null;
+}): ReactNode {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       {generalAccountId != null ? (
@@ -188,7 +224,10 @@ function Toolbar({ generalAccountId }: { generalAccountId: string | null }): Rea
           ← العودة إلى الأبواب
         </Link>
       ) : (
-        <span className="text-sm text-slate-500" title="لم يُعثر على معرّف الحساب العام">
+        <span
+          className="text-sm text-slate-500"
+          title="لم يُعثر على معرّف الحساب العام"
+        >
           ← العودة إلى الأبواب
         </span>
       )}
@@ -203,16 +242,20 @@ function Toolbar({ generalAccountId }: { generalAccountId: string | null }): Rea
 }
 
 export default function BandTable() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { isLoading, data, error, isError } = useFetchBand();
-  const rows = data ?? [];
+  const rows = useMemo(() => data ?? [], [data]);
+  const columns = useMemo(() => buildBandColumns(id), [id]);
 
   /** رابط /settings/bab/ يتوقع `general_account_id` وليس `bab_id` */
   const generalAccountIdForBabPage = useMemo((): string | null => {
     const fromQuery = searchParams.get("ga");
     if (fromQuery != null && fromQuery !== "") return fromQuery;
-    const fromRow = rows.find((r) => r.general_account_id != null)?.general_account_id;
+    const fromRow = rows.find(
+      (r) => r.general_account_id != null,
+    )?.general_account_id;
     return fromRow != null ? String(fromRow) : null;
   }, [searchParams, rows]);
 
@@ -259,6 +302,13 @@ export default function BandTable() {
         maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
+        onRowClick={(row) => {
+          const to = bandRowNo3To(row, id);
+          if (to != null) navigate(to);
+        }}
+        rowClassName={(row) =>
+          bandRowNo3To(row, id) != null ? "cursor-pointer" : undefined
+        }
       />
     </div>
   );

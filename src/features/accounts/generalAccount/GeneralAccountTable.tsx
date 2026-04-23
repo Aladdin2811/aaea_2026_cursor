@@ -21,7 +21,7 @@ import { useFetchGeneralAccount } from "./useGeneralAccount";
 const columns: DataTableColumn<GeneralAccountWithType>[] = [
   {
     id: "name",
-    header: "اسم الحساب",
+    header: "اسم الحساب العام",
     cell: (row) => (
       <span className="min-w-0 font-medium text-slate-900">
         {formatOptionalText(row.general_account_name)}
@@ -133,6 +133,7 @@ export default function GeneralAccountTable() {
         onRowClick={(row) => {
           navigate(`/settings/bab/${row.id}`);
         }}
+        rowClassName={() => "cursor-pointer"}
       />
     </div>
   );

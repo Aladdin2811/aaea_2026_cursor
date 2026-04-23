@@ -7,7 +7,7 @@ export type GeneralAccountRow = {
   account_type_id: number | null;
   description: string | null;
   notes: string | null;
-  status: string | null;
+  status: boolean | null;
 };
 
 /** صف مُرتبط من `account_type` عند الاستعلام */
@@ -35,7 +35,10 @@ const selectWithType = `
   )
 `;
 
-function parseNumericId(value: number | string, fieldLabel = "المعرّف"): number {
+function parseNumericId(
+  value: number | string,
+  fieldLabel = "المعرّف",
+): number {
   const n = typeof value === "string" ? Number(value) : value;
   if (typeof n !== "number" || !Number.isFinite(n)) {
     throw new Error(`${fieldLabel} غير صالح`);

@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { cx } from "../../../lib/cx";
+import { Spinner } from "../Spinner";
 import { DataTableCell, DataTableHeadCell } from "./DataTableCell";
 import { DataTableRow } from "./DataTableRow";
 import type {
@@ -155,12 +156,20 @@ export function DataTable<T>({
     return (
       <div
         dir={dir}
-        className={cx("rounded-xl border border-slate-200/80 bg-white p-8 text-center", className)}
+        className={cx(
+          "rounded-xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/90 p-10 text-center shadow-sm ring-1 ring-slate-200/30",
+          className,
+        )}
         role="status"
         aria-busy="true"
         aria-live="polite"
       >
-        <p className="text-slate-600">{loadingMessage}</p>
+        <div className="flex flex-col items-center justify-center gap-4">
+          <Spinner size="lg" />
+          <p className="max-w-md text-sm leading-relaxed text-slate-600">
+            {loadingMessage}
+          </p>
+        </div>
       </div>
     );
   }
@@ -183,8 +192,9 @@ export function DataTable<T>({
 
   const showSort = sortEnabled && sortableColumns.size > 0;
 
-  const scrollClassY =
-    "overflow-y-auto overscroll-contain [scrollbar-gutter:stable_both-edges] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300/80 [&::-webkit-scrollbar-track]:bg-slate-100/80";
+  /** تمرير أفقي + عمودي في نفس العنصر لتفادي تعارض عجلة الفأرة بين حاويتين متداخلتين (overflow-x-auto + overflow-y-auto). */
+  const scrollClassBoth =
+    "overflow-auto overscroll-contain [scrollbar-gutter:stable_both-edges] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300/80 [&::-webkit-scrollbar-track]:bg-slate-100/80";
 
   const tableEl: ReactNode = (
     <table
@@ -199,7 +209,7 @@ export function DataTable<T>({
         </caption>
       ) : caption != null && caption !== false ? (
         <caption
-          className="border-b border-slate-100 bg-slate-50/50 px-3 py-2 text-start text-sm text-slate-600"
+          className="border-b border-slate-100 bg-slate-50/50 px-3 py-2 text-center text-sm text-slate-600"
         >
           {caption}
         </caption>
@@ -329,20 +339,20 @@ export function DataTable<T>({
         </div>
       ) : null}
 
-      <div className="overflow-x-auto">
-        {maxHeight != null ? (
-          <div
-            className={scrollClassY}
-            style={{ maxHeight: toCssLength(maxHeight) }}
-            role="region"
-            tabIndex={0}
-            aria-label={typeof caption === "string" ? (caption as string) : "جدول البيانات"}
-          >
-            {tableEl}
-          </div>
-        ) : (
-          tableEl
-        )}
+      <div
+        className={maxHeight != null ? scrollClassBoth : "overflow-x-auto"}
+        style={maxHeight != null ? { maxHeight: toCssLength(maxHeight) } : undefined}
+        role={maxHeight != null ? "region" : undefined}
+        tabIndex={maxHeight != null ? 0 : undefined}
+        aria-label={
+          maxHeight != null
+            ? typeof caption === "string"
+              ? (caption as string)
+              : "جدول البيانات"
+            : undefined
+        }
+      >
+        {tableEl}
       </div>
 
       {footer ? <div className="border-t border-slate-100 px-3 py-2.5 sm:px-4">{footer}</div> : null}

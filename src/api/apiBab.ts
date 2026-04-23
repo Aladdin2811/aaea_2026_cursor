@@ -9,7 +9,7 @@ export type BabRow = {
   description: string | null;
   havebudget: boolean | null;
   haveprograms: boolean | null;
-  status: string | null;
+  status: boolean | null;
 };
 
 export type AccountTypeEmbed = {
@@ -49,7 +49,10 @@ const selectBabEmbed = `
   )
 `;
 
-function parseNumericId(value: number | string, fieldLabel = "المعرّف"): number {
+function parseNumericId(
+  value: number | string,
+  fieldLabel = "المعرّف",
+): number {
   const n = typeof value === "string" ? Number(value) : value;
   if (typeof n !== "number" || !Number.isFinite(n)) {
     throw new Error(`${fieldLabel} غير صالح`);
@@ -129,9 +132,7 @@ export async function getBudgetBab(): Promise<BabWithRelations[]> {
   return (data as unknown as BabWithRelations[] | null) ?? [];
 }
 
-export async function getById(
-  id: number | string,
-): Promise<BabWithRelations> {
+export async function getById(id: number | string): Promise<BabWithRelations> {
   const rowId = parseNumericId(id, "رقم الباب");
 
   const { data, error } = await supabase
@@ -165,10 +166,7 @@ export async function deleteBab(id: number | string): Promise<unknown> {
     throw new Error("لا يمكن حذف الباب لإستخدامه في قيود اليومية");
   }
 
-  const { data, error } = await supabase
-    .from("bab")
-    .delete()
-    .eq("id", rowId);
+  const { data, error } = await supabase.from("bab").delete().eq("id", rowId);
 
   if (error) {
     console.error("Supabase error:", error);

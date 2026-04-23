@@ -6,7 +6,9 @@ export const queryClient = new QueryClient({
       // staleTime: 60 * 1000,
       staleTime: 0,
       retry: 1,
-      refetchOnWindowFocus: import.meta.env.PROD,
+      /** إعادة الجلب عند العودة للتبويب — مفيد بعد تعديل البيانات من Supabase أو أداة خارجية */
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
     },
   },
 });

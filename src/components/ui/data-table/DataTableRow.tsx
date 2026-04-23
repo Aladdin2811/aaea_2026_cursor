@@ -26,7 +26,6 @@ export function DataTableRow({
         striped && index % 2 === 1 && "bg-slate-50/70",
         !selected && "hover:bg-slate-100/50",
         selected && "bg-sky-100/50 ring-1 ring-inset ring-sky-300/40",
-        onClick && "cursor-pointer",
         className,
       )}
       onClick={onClick}

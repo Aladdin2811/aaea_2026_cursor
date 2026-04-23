@@ -9,7 +9,7 @@ export type MemberRow = {
   holde: unknown;
   org_member: boolean | null;
   flag: string | null;
-  status: string | null;
+  status: boolean | null;
 };
 
 export async function getAll(): Promise<MemberRow[]> {

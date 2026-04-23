@@ -6,9 +6,15 @@ import { groupHasActiveChild, navGroups } from "../../navigation/mainNav";
 type Props = {
   open: boolean;
   onClose: () => void;
+  /** على الشاشات الكبيرة: إخفاء الشريط الجانبي بالكامل لتوسيع المحتوى */
+  desktopVisible?: boolean;
 };
 
-export function AppSidebar({ open, onClose }: Props) {
+export function AppSidebar({
+  open,
+  onClose,
+  desktopVisible = true,
+}: Props) {
   const location = useLocation();
   const baseId = useId();
   const [openGroupId, setOpenGroupId] = useState<string | null>(() => {
@@ -34,10 +40,15 @@ export function AppSidebar({ open, onClose }: Props) {
     ? "max-lg:translate-x-0"
     : "max-lg:ltr:-translate-x-full max-lg:rtl:translate-x-full";
 
+  /** على lg: انكماش/توسيع بـ max-width ليعمل الاختفاء والظهور بنفس سلاسة التوسيع */
+  const desktopCollapse = desktopVisible
+    ? "lg:max-w-[14rem] lg:border-slate-200/80 lg:opacity-100 lg:pointer-events-auto"
+    : "lg:max-w-0 lg:border-transparent lg:opacity-0 lg:pointer-events-none";
+
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm transition-opacity lg:hidden ${
+        className={`fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 ease-in-out lg:hidden ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         aria-hidden={!open}
@@ -45,39 +56,40 @@ export function AppSidebar({ open, onClose }: Props) {
       />
 
       <aside
-        className={`fixed inset-y-0 start-0 z-50 flex h-dvh w-[min(100%,14rem)] shrink-0 flex-col border-e border-slate-200/80 bg-white shadow-xl shadow-slate-200/50 transition-transform duration-200 ease-out lg:static lg:z-0 lg:w-56 lg:translate-x-0 lg:border-s-0 lg:border-e lg:shadow-none ${mobileSlide}`}
+        className={`fixed inset-y-0 start-0 z-50 flex h-dvh shrink-0 flex-col border-e border-slate-200/80 bg-white shadow-xl shadow-slate-200/50 max-lg:w-[min(100%,14rem)] max-lg:transition-transform max-lg:duration-300 max-lg:ease-in-out lg:static lg:z-0 lg:h-dvh lg:min-w-0 lg:w-full lg:overflow-hidden lg:border-s-0 lg:border-e lg:shadow-none lg:transition-[max-width,opacity,border-color] lg:duration-300 lg:ease-in-out ${mobileSlide} ${desktopCollapse}`}
         aria-label="التنقل الرئيسي"
       >
-        <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-4">
-          <div className="flex min-w-0 items-center gap-2">
-            <img
-              src="/logo-AAEA-w.jpeg"
-              alt="شعار الهيئة العربية للطاقة الذرية"
-              className="size-9 shrink-0 rounded-lg object-contain"
-            />
-            <div className="min-w-0 text-start">
-              <p className="truncate text-sm font-semibold text-slate-900">
-                الهيئة العربية للطاقة الذرية
-              </p>
-              <p className="truncate text-xs text-slate-500">
-                جامعة الدول العربية
-              </p>
+        <div className="flex h-full min-h-0 w-full min-w-0 flex-col lg:w-56 lg:min-w-56 lg:shrink-0">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-4">
+            <div className="flex min-w-0 items-center gap-2">
+              <img
+                src="/logo-AAEA-w.jpeg"
+                alt="شعار الهيئة العربية للطاقة الذرية"
+                className="size-9 shrink-0 rounded-lg object-contain"
+              />
+              <div className="min-w-0 text-start">
+                <p className="truncate text-sm font-semibold text-slate-900">
+                  الهيئة العربية للطاقة الذرية
+                </p>
+                <p className="truncate text-xs text-slate-500">
+                  جامعة الدول العربية
+                </p>
+              </div>
             </div>
+            <button
+              type="button"
+              className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 lg:hidden"
+              onClick={onClose}
+              aria-label="إغلاق القائمة"
+            >
+              <X className="size-5" strokeWidth={1.75} />
+            </button>
           </div>
-          <button
-            type="button"
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 lg:hidden"
-            onClick={onClose}
-            aria-label="إغلاق القائمة"
-          >
-            <X className="size-5" strokeWidth={1.75} />
-          </button>
-        </div>
 
-        <nav
-          className="flex-1 space-y-1.5 overflow-y-auto overflow-x-hidden p-2"
-          aria-label="القائمة الرئيسية"
-        >
+          <nav
+            className="flex-1 space-y-1.5 overflow-y-auto overflow-x-hidden p-2"
+            aria-label="القائمة الرئيسية"
+          >
           {navGroups.map((group) => {
             const Icon = group.icon;
             const expanded = openGroupId === group.id;
@@ -160,10 +172,10 @@ export function AppSidebar({ open, onClose }: Props) {
               </div>
             );
           })}
-        </nav>
+          </nav>
 
-        <div className="border-t border-slate-100 p-3">
-          <p className="flex min-w-0 items-center gap-1.5 truncate text-xs text-slate-500">
+          <div className="border-t border-slate-100 p-3">
+            <p className="flex min-w-0 items-center gap-1.5 truncate text-xs text-slate-500">
             <span className="min-w-0 truncate whitespace-nowrap">
               AAEA. All rights reserved. © {new Date().getFullYear()}
             </span>
@@ -174,7 +186,8 @@ export function AppSidebar({ open, onClose }: Props) {
               height={20}
               className="size-5 shrink-0"
             />
-          </p>
+            </p>
+          </div>
         </div>
       </aside>
     </>

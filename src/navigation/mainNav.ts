@@ -85,7 +85,10 @@ export const navGroups: NavGroup[] = [
       { to: "/financial_management/account_transaction", label: "حركة حساب" },
       { to: "/financial_management/monthly_report", label: "المنصرف الشهري" },
       { to: "/financial_management/trial_balance", label: "ميزان المراجعة" },
-      { to: "/financial_management/banks_dealt_with", label: "الحسابات المفتوحة لدى البنوك" },
+      {
+        to: "/financial_management/banks_dealt_with",
+        label: "الحسابات المفتوحة لدى البنوك",
+      },
     ],
   },
   {
@@ -93,14 +96,23 @@ export const navGroups: NavGroup[] = [
     label: "الشؤون الإدارية",
     icon: Banknote,
     children: [
-      { to: "/administrative_management/job_nature", label: "أنواع الوظائف", end: true },
-      { to: "/administrative_management/job_category", label: "الفئات الوظيفة" },
-      { to: "/administrative_management/job_grade", label: "الدرجات الوظيفة" },
-      { to: "/administrative_management/job_title", label: "المسميات الوظيفية" },
-      { to: "/administrative_management/employees_basic_salaries", label: "الرواتب الأساسية للموظفين" },
-      { to: "/administrative_management/contractors_basic_salaries", label: "الرواتب الأساسية للمتعاقدين" },
-      { to: "/administrative_management/experts_basic_salaries", label: "مكافأت الخبراء" },
-      { to: "/administrative_management/allowances", label: "البدلات" },
+      { to: "/administrative_management/jobs", label: "الوظائف", end: true },
+      // { to: "/administrative_management/job_category", label: "الفئات الوظيفة" },
+      // { to: "/administrative_management/job_grade", label: "الدرجات الوظيفة" },
+      // { to: "/administrative_management/job_title", label: "المسميات الوظيفية" },
+      {
+        to: "/administrative_management/basic_salaries",
+        label: "الرواتب الأساسية",
+      },
+      // {
+      //   to: "/administrative_management/contractors_basic_salaries",
+      //   label: "الرواتب الأساسية للمتعاقدين",
+      // },
+      // {
+      //   to: "/administrative_management/experts_basic_salaries",
+      //   label: "مكافأت الخبراء",
+      // },
+      { to: "/administrative_management/allowancesPage", label: "البدلات" },
     ],
   },
   {
