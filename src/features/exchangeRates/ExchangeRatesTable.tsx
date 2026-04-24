@@ -193,7 +193,6 @@ export default function ExchangeRatesTable() {
         indexHeader="#"
         toolbar={<ToolbarCount n={rows.length} />}
         caption="جدول أسعار الصرف"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

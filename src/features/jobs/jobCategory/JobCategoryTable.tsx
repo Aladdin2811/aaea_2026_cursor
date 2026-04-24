@@ -96,7 +96,6 @@ export default function JobCategoryTable() {
           ) : null
         }
         caption="جدول الفئات الوظيفية"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

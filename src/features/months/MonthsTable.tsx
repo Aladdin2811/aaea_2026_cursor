@@ -134,7 +134,6 @@ export default function MonthsTable() {
           ) : null
         }
         caption="جدول الأشهر"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

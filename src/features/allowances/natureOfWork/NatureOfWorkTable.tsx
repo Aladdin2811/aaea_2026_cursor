@@ -79,7 +79,6 @@ export default function NatureOfWorkTable() {
           ) : null
         }
         caption="جدول بدل طبيعة العمل"
-        maxHeight="min(70dvh, 560px)"
         density="comfortable"
         minTableWidth="100%"
       />

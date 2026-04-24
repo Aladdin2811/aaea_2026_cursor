@@ -94,7 +94,6 @@ export default function JobGradeTable() {
           ) : null
         }
         caption="جدول الدرجات الوظيفية"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

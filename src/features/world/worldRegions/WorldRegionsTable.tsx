@@ -70,7 +70,6 @@ export default function WorldRegionsTable() {
           ) : null
         }
         caption="جدول تصنيف مناطق العالم"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

@@ -60,7 +60,6 @@ export default function ExpatriateTable() {
           ) : null
         }
         caption="جدول الاغتراب"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

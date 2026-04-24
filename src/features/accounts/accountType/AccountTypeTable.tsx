@@ -69,7 +69,6 @@ export default function AccountTypeTable() {
           ) : null
         }
         caption="جدول تصنيفات الحسابات"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
         onRowClick={(row) => {

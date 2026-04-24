@@ -242,7 +242,6 @@ export default function No3Table() {
         indexHeader="#"
         toolbar={<Toolbar babIdForBandPage={babIdForBandPage} />}
         caption={`الأنواع (البند ${id})`}
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
         onRowClick={(row) => {

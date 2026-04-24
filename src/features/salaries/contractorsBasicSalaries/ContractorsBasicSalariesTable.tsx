@@ -156,7 +156,6 @@ export default function ContractorsBasicSalariesTable() {
           ) : null
         }
         caption="جدول الرواتب الأساسية للمتعاقدين"
-        maxHeight="min(70dvh, 640px)"
         density="compact"
         minTableWidth="min(100%, 900px)"
       />

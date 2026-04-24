@@ -70,7 +70,6 @@ export default function WorldClassificationsTable() {
           ) : null
         }
         caption="جدول تصنيف دول العالم"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

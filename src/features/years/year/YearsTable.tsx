@@ -71,7 +71,6 @@ export default function YearsTable() {
           ) : null
         }
         caption="جدول السنوات المالية"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

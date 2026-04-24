@@ -60,7 +60,6 @@ export default function ExchangeDocumentTypeTable() {
           ) : null
         }
         caption="جدول أنواع مستند الصرف"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

@@ -70,7 +70,6 @@ export default function SocialSituationsTable() {
           ) : null
         }
         caption="جدول الأحوال الاجتماعية"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

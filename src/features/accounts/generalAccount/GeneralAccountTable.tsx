@@ -127,7 +127,6 @@ export default function GeneralAccountTable() {
         indexHeader="#"
         toolbar={<BackLinkToolbar />}
         caption={`الحسابات العامة (تصنيف رقم ${id})`}
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
         onRowClick={(row) => {

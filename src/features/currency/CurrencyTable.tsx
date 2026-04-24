@@ -70,7 +70,6 @@ export default function CurrencyTable() {
           ) : null
         }
         caption="جدول العملات المتعامل بها"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

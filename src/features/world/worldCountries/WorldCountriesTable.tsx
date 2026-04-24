@@ -121,7 +121,6 @@ export default function WorldCountriesTable() {
           ) : null
         }
         caption="جدول دول العالم"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

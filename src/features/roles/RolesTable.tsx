@@ -82,7 +82,6 @@ export default function RolesTable() {
           ) : null
         }
         caption="جدول الصلاحيات"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

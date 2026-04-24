@@ -287,7 +287,6 @@ export default function DetailedTable() {
           <Toolbar bandIdForNo3Page={bandIdForNo3Page} babQuery={babQuery} />
         }
         caption={`الحسابات التفصيلية (النوع ${id})`}
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

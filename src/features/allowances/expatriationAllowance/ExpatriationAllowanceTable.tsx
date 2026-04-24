@@ -68,7 +68,6 @@ export default function ExpatriationAllowanceTable() {
           ) : null
         }
         caption="جدول نسبة بدل الاغتراب"
-        maxHeight="min(70dvh, 480px)"
         density="comfortable"
         minTableWidth="100%"
       />

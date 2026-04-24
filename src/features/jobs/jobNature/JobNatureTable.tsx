@@ -82,7 +82,6 @@ export default function JobNatureTable() {
           ) : null
         }
         caption="جدول طبيعة العمل"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

@@ -68,7 +68,6 @@ export default function LivingCostIncreaseTable() {
           ) : null
         }
         caption="جدول نسبة الزيادة في تعويض غلاء المعيشة"
-        maxHeight="min(70dvh, 480px)"
         density="comfortable"
         minTableWidth="100%"
       />

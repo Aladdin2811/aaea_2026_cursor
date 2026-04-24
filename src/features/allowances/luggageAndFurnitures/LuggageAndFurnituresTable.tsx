@@ -116,7 +116,6 @@ export default function LuggageAndFurnituresTable() {
           ) : null
         }
         caption="جدول بدل نقل الأمتعة والأثاث"
-        maxHeight="min(70dvh, 560px)"
         density="compact"
         minTableWidth="min(100%, 720px)"
       />

@@ -8,14 +8,14 @@ export function AppLayout() {
   const [sidebarDesktopVisible, setSidebarDesktopVisible] = useState(true)
 
   return (
-    <div className="flex min-h-dvh bg-slate-50">
+    <div className="flex h-dvh overflow-hidden bg-slate-50">
       <AppSidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         desktopVisible={sidebarDesktopVisible}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <AppHeader
           onMenuClick={() => setSidebarOpen(true)}
           sidebarDesktopVisible={sidebarDesktopVisible}
@@ -23,7 +23,7 @@ export function AppLayout() {
             setSidebarDesktopVisible((v) => !v)
           }
         />
-        <main className="flex-1 px-4 pt-3 pb-6 sm:px-6 lg:px-8">
+        <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pt-3 pb-6 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-full">
             <Outlet />
           </div>

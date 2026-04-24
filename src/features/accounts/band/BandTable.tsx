@@ -299,7 +299,6 @@ export default function BandTable() {
         indexHeader="#"
         toolbar={<Toolbar generalAccountId={generalAccountIdForBabPage} />}
         caption={`البنود (الباب ${id})`}
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
         onRowClick={(row) => {

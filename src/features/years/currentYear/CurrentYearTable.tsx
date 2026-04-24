@@ -153,7 +153,6 @@ export default function CurrentYearTable() {
           ) : null
         }
         caption="العام المالي الحالي"
-        maxHeight="min(40dvh, 320px)"
         density="comfortable"
         minTableWidth="100%"
       />

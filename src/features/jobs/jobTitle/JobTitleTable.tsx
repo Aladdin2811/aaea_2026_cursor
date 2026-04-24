@@ -70,7 +70,6 @@ export default function JobTitleTable() {
           ) : null
         }
         caption="جدول المسميات الوظيفية"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

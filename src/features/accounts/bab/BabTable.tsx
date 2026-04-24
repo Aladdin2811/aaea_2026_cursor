@@ -182,7 +182,6 @@ export default function BabTable() {
         indexHeader="#"
         toolbar={<Toolbar generalAccountId={id} />}
         caption={`الأبواب (الحساب العام ${id})`}
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
         onRowClick={(row) => {

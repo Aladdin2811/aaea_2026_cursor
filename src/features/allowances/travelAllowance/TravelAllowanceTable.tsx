@@ -125,7 +125,6 @@ export default function TravelAllowanceTable() {
           ) : null
         }
         caption="جدول تعويض بدل السفر"
-        maxHeight="min(70dvh, 640px)"
         density="compact"
         minTableWidth="min(100%, 960px)"
       />

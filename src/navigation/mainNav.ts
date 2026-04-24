@@ -34,6 +34,9 @@ export const navGroups: NavGroup[] = [
       { to: "/dashboard/summary", label: "ملخص ومؤشرات" },
     ],
   },
+
+  //==========================================================================
+
   {
     id: "members",
     label: "الدول الأعضاء",
@@ -51,6 +54,56 @@ export const navGroups: NavGroup[] = [
     ],
   },
 
+  //==========================================================================
+
+  {
+    id: "decisions",
+    label: "القرارات",
+    icon: Wallet,
+    children: [
+      {
+        to: "/decisions/decisions_travel",
+        label: "قرارات الإيفاد للأنشطة",
+        end: true,
+      },
+      {
+        to: "/decisions/decisions_emergency_advance",
+        label: "قرارات السلف الطارئة",
+      },
+    ],
+  },
+
+  //==========================================================================
+
+  {
+    id: "programs",
+    label: "الأنشطة والبرامج",
+    icon: Wallet,
+    children: [
+      {
+        to: "/programs/certified_programs",
+        label: "الأنشطة المعتمدة",
+        end: true,
+      },
+      { to: "/programs/programs_type", label: "أنواع الأنشطة والبرامج" },
+      { to: "/programs/programs", label: "الأنشطة والبرامج المسجلة" },
+      {
+        to: "/programs/program_participants",
+        label: "المشاركين بالأنشطة والبرامج",
+      },
+      {
+        to: "/programs/programs_experts",
+        label: "المحاضرين بالأنشطة والبرامج",
+      },
+      {
+        to: "/programs/activity_advance_settlement",
+        label: "تسوية مصروفات الأنشطة",
+      },
+    ],
+  },
+
+  //==========================================================================
+
   {
     id: "journal",
     label: "قيود اليومية",
@@ -62,6 +115,8 @@ export const navGroups: NavGroup[] = [
       { to: "/journal/beneficiaries", label: "المستفيدين" },
     ],
   },
+
+  //==========================================================================
 
   {
     id: "financial_management",
@@ -91,50 +146,260 @@ export const navGroups: NavGroup[] = [
       },
     ],
   },
+
+  //==========================================================================
+
   {
     id: "administrative_management",
     label: "الشؤون الإدارية",
     icon: Banknote,
     children: [
       { to: "/administrative_management/jobs", label: "الوظائف", end: true },
-      // { to: "/administrative_management/job_category", label: "الفئات الوظيفة" },
-      // { to: "/administrative_management/job_grade", label: "الدرجات الوظيفة" },
-      // { to: "/administrative_management/job_title", label: "المسميات الوظيفية" },
       {
         to: "/administrative_management/basic_salaries",
         label: "الرواتب الأساسية",
       },
-      // {
-      //   to: "/administrative_management/contractors_basic_salaries",
-      //   label: "الرواتب الأساسية للمتعاقدين",
-      // },
-      // {
-      //   to: "/administrative_management/experts_basic_salaries",
-      //   label: "مكافأت الخبراء",
-      // },
       { to: "/administrative_management/allowancesPage", label: "البدلات" },
+      { to: "/administrative_management/employees", label: "الموظفين" },
+      {
+        to: "/administrative_management/employees_banks",
+        label: "الحسابات البنكية للموظفين",
+      },
+      {
+        to: "/administrative_management/vacation_type",
+        label: "أنواع الإجازات",
+      },
+      {
+        to: "/administrative_management/vacations_balances",
+        label: "أرصدة الإجازات",
+      },
+      {
+        to: "/administrative_management/vacations",
+        label: "الإجازات الممنوحة",
+      },
+      {
+        to: "/administrative_management/deduction_from_salary",
+        label: "الخصم من الراتب",
+      },
+      {
+        to: "/administrative_management/employees_payroll",
+        label: "إصدار رواتب الموظفين",
+      },
+      {
+        to: "/administrative_management/contractors_payroll",
+        label: "إصدار رواتب المتعاقدين",
+      },
+      {
+        to: "/administrative_management/experts_payroll",
+        label: "إصدار مكافآت الخبراء",
+      },
     ],
   },
+
+  //==========================================================================
+
   {
-    id: "hr",
-    label: "الموارد البشرية",
+    id: "end_of_servic",
+    label: "ص نهاية الخدمة",
+    icon: Banknote,
+    children: [
+      {
+        to: "/end_of_servic/end_of_service_employee_contribution",
+        label: "نسبة مساهمة الموظفين",
+        end: true,
+      },
+      {
+        to: "/end_of_servic/end_of_service_contractors_contribution",
+        label: "نسبة مساهمة المتعاقدين",
+      },
+    ],
+  },
+
+  //==========================================================================
+
+  {
+    id: "social_security",
+    label: "ص الضمان الإجتماعي",
+    icon: Banknote,
+    children: [
+      {
+        to: "/social_security/social_security_expenses",
+        label: "مصروفات التعويض الصحي",
+        end: true,
+      },
+      {
+        to: "/social_security/social_security_expenses_statement",
+        label: "كشف مصروفات التعويض الصحي",
+      },
+      {
+        to: "/social_security/social_security_contribution",
+        label: "نسب المساهمة",
+      },
+      {
+        to: "/social_security/social_security_class_category",
+        label: "تصنيف وفئات المستفيدين بالضمان",
+      },
+      {
+        to: "/social_security/social_security_band",
+        label: "بنود الضمان",
+      },
+      {
+        to: "/social_security/social_security_percentage",
+        label: "نسب تعويض الضمان",
+      },
+      {
+        to: "/social_security/social_security_band_percentage",
+        label: "نسب تعويض بنود الضمان",
+      },
+      {
+        to: "/social_security/social_security_band_limit",
+        label: "أسقف التعويض لبنود الضمان",
+      },
+      {
+        to: "/social_security/social_security_contractors_repayment",
+        label: "نسب تعويض المتعاقدين بالضمان",
+      },
+      {
+        to: "/social_security/social_security_situations",
+        label: "الحالات الإجتماعية للضمان",
+      },
+      {
+        to: "/social_security/social_security_currency",
+        label: "العملات المتعامل بها",
+      },
+      {
+        to: "/social_security/social_security_currency_rate",
+        label: "سعر الصرف للضمان",
+      },
+    ],
+  },
+
+  //==========================================================================
+
+  {
+    id: "audit",
+    label: "الرقابة الداخلية",
     icon: Users,
     children: [
-      { to: "/hr", label: "نظرة عامة", end: true },
-      { to: "/hr/employees", label: "الموظفون" },
-      { to: "/hr/payroll", label: "الرواتب" },
+      {
+        to: "/audit/audit_table_1",
+        label: "مساهمات الدول في موازنة المنظمة (1)",
+        end: true,
+      },
+      {
+        to: "/audit/audit_table_2",
+        label: "الدول المسددة لمساهماتها عن السنة الحالية (2)",
+      },
+      {
+        to: "/audit/audit_table_3",
+        label: "التوزيع الزمني لمتحصلات مساهمات الدول (3)",
+      },
+      {
+        to: "/audit/audit_table_4",
+        label: "متأخرات الدول فى موازنات المنظمة (4)",
+      },
+      {
+        to: "/audit/audit_table_5",
+        label: "المساهمات غير المسددة (5)",
+      },
+      {
+        to: "/audit/audit_table_6",
+        label: "تطور مجموع الإيرادات (6)",
+      },
+      {
+        to: "/audit/audit_table_7",
+        label: "تفصيل الموارد الذاتية (7)",
+      },
+      {
+        to: "/audit/audit_table_8",
+        label: "مقارنة بين المحصل والتقديرات (8)",
+      },
+      {
+        to: "/audit/audit_table_9",
+        label: "الميزانية المعتمدة والمصروفات (9)",
+      },
+      {
+        to: "/audit/audit_table_10",
+        label: "الإعتمادات والمصروفات الفعلية ونسب الإنفاق (10)",
+      },
+      {
+        to: "/audit/audit_table_11",
+        label: "تحليل الوضعية المالية (11)",
+      },
+      {
+        to: "/audit/audit_table_14",
+        label: "تطور الوضعية المالية لصندوق مكافأة نهاية الخدمة (14)",
+      },
+      {
+        to: "/audit/audit_table_15",
+        label: "حساب صندوق مكافأة نهاية الخدمة (15)",
+      },
+      {
+        to: "/audit/audit_table_16",
+        label: "حساب صندوق الضمان الإجتماعي (16)",
+      },
     ],
   },
+
+  //==========================================================================
+
   {
-    id: "inventory",
-    label: "المخزون",
+    id: "warehouse",
+    label: "المخزن",
+    icon: Users,
+    children: [
+      {
+        to: "/warehouse/warehouse_categories",
+        label: "أنواع أصناف المخزن",
+        end: true,
+      },
+      {
+        to: "/warehouse/warehouse_classifications",
+        label: "تصنيف أصناف المخزن",
+      },
+      { to: "/warehouse/warehouse_addition", label: "إضافة مخزنية" },
+      { to: "/warehouse/warehouse_disbursed", label: "صرف من المخزن" },
+      { to: "/warehouse/warehouse_report", label: "تقارير" },
+    ],
+  },
+
+  //==========================================================================
+
+  {
+    id: "library",
+    label: "المكتبة",
     icon: Boxes,
     children: [
-      { to: "/inventory", label: "نظرة عامة", end: true },
-      { to: "/inventory/items", label: "الأصناف" },
-      { to: "/inventory/purchase-orders", label: "أوامر الشراء" },
+      {
+        to: "/library/library_classifications",
+        label: "تصنيفات المكتبة",
+        end: true,
+      },
+      { to: "/library/library_addition", label: "إضافة مكتبية" },
+      { to: "/library/library_borrowing", label: "إستعارة مكتبية" },
+      { to: "/library/library_items", label: "موجودات المكتبة" },
     ],
   },
+
+   //==========================================================================
+
+  {
+    id: "documents_regulations",
+    label: "وثائق ولوائح",
+    icon: Boxes,
+    children: [
+      {
+        to: "/documents_regulations/executive_council",
+        label: "محاضر جلسات المجلس التنفيذي",
+        end: true,
+      },
+      { to: "/documents_regulations/general_conference", label: "محاضر جلسات المؤتمر العام" },
+      { to: "/documents_regulations/regulations", label: "الأنظمة واللوائح" },
+    ],
+  },
+
+  //==========================================================================
+
   {
     id: "settings",
     label: "الإعدادات",

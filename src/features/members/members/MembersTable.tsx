@@ -115,7 +115,6 @@ export default function MembersTable() {
         indexHeader="#"
         toolbar={!isLoading && rows.length > 0 ? <ToolbarCount n={rows.length} /> : null}
         caption="جدول الدول الأعضاء"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

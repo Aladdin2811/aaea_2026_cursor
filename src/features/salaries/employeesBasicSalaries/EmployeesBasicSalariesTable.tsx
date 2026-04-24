@@ -240,7 +240,6 @@ export default function EmployeesBasicSalariesTable() {
           ) : null
         }
         caption="جدول الرواتب الأساسية للموظفين"
-        maxHeight="min(70dvh, 640px)"
         density="compact"
         minTableWidth="min(100%, 1100px)"
       />

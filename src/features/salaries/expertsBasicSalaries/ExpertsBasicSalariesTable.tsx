@@ -125,7 +125,6 @@ export default function ExpertsBasicSalariesTable() {
           ) : null
         }
         caption="جدول المكافآت الأساسية للخبراء"
-        maxHeight="min(70dvh, 640px)"
         density="compact"
         minTableWidth="min(100%, 900px)"
       />

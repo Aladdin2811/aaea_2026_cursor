@@ -60,7 +60,6 @@ export default function FundingTypeTable() {
           ) : null
         }
         caption="جدول مصادر التمويل"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

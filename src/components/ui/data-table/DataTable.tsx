@@ -40,7 +40,10 @@ export type DataTableProps<T> = {
   loadingMessage?: ReactNode;
   className?: string;
   tableClassName?: string;
-  /** ارتفاع أقصى مع تمرير عمودي داخل منطقة الجدول */
+  /**
+   * ارتفاع أقصى للحاوية + تمرير عمودي داخل الجدول.
+   * إن حُذف أو تُرك `undefined`: يُعرض الجدول بكامل الصفوف والتمرير العمودي يكون في الصفحة (`<main>`).
+   */
   maxHeight?: string | number;
   /** تثبيت رأس الأعمدة عند التمرير */
   stickyHeader?: boolean;

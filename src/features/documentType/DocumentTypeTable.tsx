@@ -86,7 +86,6 @@ export default function DocumentTypeTable() {
           ) : null
         }
         caption="جدول أنواع القيود"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

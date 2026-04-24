@@ -56,6 +56,8 @@ export const router = createBrowserRouter([
         ),
       },
 
+      //==========================================================================
+
       {
         path: "members/contributions",
         element: ph("المساهمات", "اشتراكات ومستحقات الدول الأعضاء."),
@@ -78,6 +80,46 @@ export const router = createBrowserRouter([
       },
       { path: "members", element: <MembersPage /> },
 
+      //==========================================================================
+
+      {
+        path: "decisions/decisions_travel",
+        element: ph("قرارات الإيفاد للأنشطة", "------"),
+      },
+      {
+        path: "decisions/decisions_emergency_advance",
+        element: ph("قرارات السلف الطارئة", "------"),
+      },
+
+      //==========================================================================
+
+      {
+        path: "programs/certified_programs",
+        element: ph("الأنشطة المعتمدة", "------"),
+      },
+      {
+        path: "programs/programs_type",
+        element: ph("أنواع الأنشطة والبرامج", "------"),
+      },
+      {
+        path: "programs/programs",
+        element: ph("الأنشطة والبرامج المسجلة", "------"),
+      },
+      {
+        path: "programs/program_participants",
+        element: ph("المشاركين بالأنشطة والبرامج", "------"),
+      },
+      {
+        path: "programs/programs_experts",
+        element: ph("المحاضرين بالأنشطة والبرامج", "------"),
+      },
+      {
+        path: "programs/activity_advance_settlement",
+        element: ph("تسوية مصروفات الأنشطة", "------"),
+      },
+
+      //==========================================================================
+
       {
         path: "journal/new_journal",
         element: ph("تسجيل قيد جديد", "------"),
@@ -94,6 +136,8 @@ export const router = createBrowserRouter([
         path: "journal/beneficiaries",
         element: ph("المستفيدين", "------"),
       },
+
+      //==========================================================================
 
       {
         path: "financial_management/approved_budgets",
@@ -136,80 +180,243 @@ export const router = createBrowserRouter([
         element: ph("الحسابات المفتوحة لدى البنوك", "------"),
       },
 
+      //==========================================================================
+
       {
         path: "administrative_management/jobs",
         element: <JobsPage />,
       },
-      // {
-      //   path: "administrative_management/job_category",
-      //   element: ph("الفئات الوظيفة", "------"),
-      // },
-      // {
-      //   path: "administrative_management/job_grade",
-      //   element: ph("الدرجات الوظيفة", "------"),
-      // },
-      // {
-      //   path: "administrative_management/job_title",
-      //   element: ph("المسميات الوظيفية", "------"),
-      // },
       {
         path: "administrative_management/basic_salaries",
         element: <BasicSalariesPage />,
       },
-      // {
-      //   path: "administrative_management/contractors_basic_salaries",
-      //   element: ph("الرواتب الأساسية للمتعاقدين", "------"),
-      // },
-      // {
-      //   path: "administrative_management/experts_basic_salaries",
-      //   element: ph("مكافأت الخبراء", "------"),
-      // },
       {
         path: "administrative_management/AllowancesPage",
         element: <AllowancesPage />,
       },
-
       {
-        path: "treasury/banks",
-        element: ph("الحسابات البنكية", "التسويات والتحويلات البنكية."),
+        path: "administrative_management/employees",
+        element: ph("الموظفين", "------"),
       },
       {
-        path: "treasury",
+        path: "administrative_management/employees_banks",
+        element: ph("الحسابات البنكية للموظفين", "------"),
+      },
+      {
+        path: "administrative_management/vacation_type",
+        element: ph("أنواع الإجازات", "------"),
+      },
+      {
+        path: "administrative_management/vacations_balances",
+        element: ph("أرصدة الإجازات", "------"),
+      },
+      {
+        path: "administrative_management/vacations",
+        element: ph("الإجازات الممنوحة", "------"),
+      },
+      {
+        path: "administrative_management/deduction_from_salary",
+        element: ph("الخصم من الراتب", "------"),
+      },
+      {
+        path: "administrative_management/employees_payroll",
+        element: ph("إصدار رواتب الموظفين", "------"),
+      },
+      {
+        path: "administrative_management/contractors_payroll",
+        element: ph("إصدار رواتب المتعاقدين", "------"),
+      },
+      {
+        path: "administrative_management/experts_payroll",
+        element: ph("إصدار مكافآت الخبراء", "------"),
+      },
+
+      //==========================================================================
+
+      {
+        path: "end_of_servic/end_of_service_employee_contribution",
+        element: ph("نسبة مساهمة الموظفين", "------"),
+      },
+      {
+        path: "end_of_servic/end_of_service_contractors_contribution",
+        element: ph("نسبة مساهمة المتعاقدين", "------"),
+      },
+
+      //==========================================================================
+
+      {
+        path: "social_security/social_security_expenses",
+        element: ph("مصروفات التعويض الصحي", "------"),
+      },
+      {
+        path: "social_security/social_security_expenses_statement",
+        element: ph("كشف مصروفات التعويض الصحي", "------"),
+      },
+            {
+        path: "social_security/social_security_contribution",
+        element: ph("نسب المساهمة", "------"),
+      },
+                  {
+        path: "social_security/social_security_class_category",
+        element: ph("تصنيف وفئات المستفيدين بالضمان", "------"),
+      },
+                        {
+        path: "social_security/social_security_band",
+        element: ph("بنود الضمان", "------"),
+      },
+                              {
+        path: "social_security/social_security_percentage",
+        element: ph("نسب تعويض الضمان", "------"),
+      },
+                              {
+        path: "social_security/social_security_band_percentage",
+        element: ph("نسب تعويض بنود الضمان", "------"),
+      },
+                                    {
+        path: "social_security/social_security_band_limit",
+        element: ph("أسقف التعويض لبنود الضمان", "------"),
+      },
+                                          {
+        path: "social_security/social_security_contractors_repayment",
+        element: ph("نسب تعويض المتعاقدين بالضمان", "------"),
+      },
+                                                {
+        path: "social_security/social_security_situations",
+        element: ph("الحالات الإجتماعية للضمان", "------"),
+      },
+                                                {
+        path: "social_security/social_security_currency",
+        element: ph("العملات المتعامل بها", "------"),
+      },
+                                                      {
+        path: "social_security/social_security_currency_rate",
+        element: ph("سعر الصرف للضمان", "------"),
+      },
+
+      //==========================================================================
+
+      {
+        path: "audit/audit_table_1",
+        element: ph("مساهمات الدول في موازنة المنظمة (1)", "------"),
+      },
+      {
+        path: "audit/audit_table_2",
+        element: ph("الدول المسددة لمساهماتها عن السنة الحالية (2)", "------"),
+      },
+      {
+        path: "audit/audit_table_3",
+        element: ph("التوزيع الزمني لمتحصلات مساهمات الدول (3)", "------"),
+      },
+      {
+        path: "audit/audit_table_4",
+        element: ph("متأخرات الدول فى موازنات المنظمة (4)", "------"),
+      },
+      {
+        path: "audit/audit_table_5",
+        element: ph("المساهمات غير المسددة (5)", "------"),
+      },
+      {
+        path: "audit/audit_table_6",
+        element: ph("تطور مجموع الإيرادات (6)", "------"),
+      },
+      {
+        path: "audit/audit_table_7",
+        element: ph("تفصيل الموارد الذاتية (7)", "------"),
+      },
+      {
+        path: "audit/audit_table_8",
+        element: ph("مقارنة بين المحصل والتقديرات (8)", "------"),
+      },
+      {
+        path: "audit/audit_table_9",
+        element: ph("الميزانية المعتمدة والمصروفات (9)", "------"),
+      },
+      {
+        path: "audit/audit_table_10",
         element: ph(
-          "الخزينة والبنوك",
-          "حركة النقد، التحويلات، والتسويات البنكية.",
+          "الإعتمادات والمصروفات الفعلية ونسب الإنفاق (10)",
+          "------",
         ),
       },
-
       {
-        path: "hr/employees",
-        element: ph("الموظفون", "بيانات الموظفين والملفات."),
+        path: "audit/audit_table_11",
+        element: ph("تحليل الوضعية المالية (11)", "------"),
       },
       {
-        path: "hr/payroll",
-        element: ph("الرواتب", "مسير الرواتب والاستقطاعات."),
-      },
-      {
-        path: "hr",
-        element: ph("الموارد البشرية", "الموظفون، الحضور، والرواتب."),
-      },
-
-      {
-        path: "inventory/items",
-        element: ph("الأصناف", "تعريف الأصناف والوحدات."),
-      },
-      {
-        path: "inventory/purchase-orders",
-        element: ph("أوامر الشراء", "متابعة أوامر الشراء والاستلام."),
-      },
-      {
-        path: "inventory",
+        path: "audit/audit_table_14",
         element: ph(
-          "المخزون والمشتريات",
-          "الأصناف، المستودعات، وأوامر الشراء.",
+          "تطور الوضعية المالية لصندوق مكافأة نهاية الخدمة (14)",
+          "------",
         ),
       },
+      {
+        path: "audit/audit_table_15",
+        element: ph("حساب صندوق مكافأة نهاية الخدمة (15)", "------"),
+      },
+      {
+        path: "audit/audit_table_16",
+        element: ph("حساب صندوق الضمان الإجتماعي (16)", "------"),
+      },
 
+      //==========================================================================
+
+      {
+        path: "warehouse/warehouse_categories",
+        element: ph("أنواع أصناف المخزن", "------"),
+      },
+      {
+        path: "warehouse/warehouse_classifications",
+        element: ph("تصنيف أصناف المخزن", "------"),
+      },
+      {
+        path: "warehouse/warehouse_addition",
+        element: ph("إضافة مخزنية", "------"),
+      },
+      {
+        path: "warehouse/warehouse_disbursed",
+        element: ph("صرف من المخزن", "------"),
+      },
+      {
+        path: "warehouse/warehouse_report",
+        element: ph("تقارير", "------"),
+      },
+
+      //==========================================================================
+
+      {
+        path: "library/library_classifications",
+        element: ph("تصنيفات المكتبة", "------"),
+      },
+      {
+        path: "library/library_addition",
+        element: ph("إضافة مكتبية", "------"),
+      },
+      {
+        path: "library/library_borrowing",
+        element: ph("إستعارة مكتبية", "------"),
+      },
+      {
+        path: "library/library_items",
+        element: ph("موجودات المكتبة", "------"),
+      },
+
+      //==========================================================================
+
+      {
+        path: "documents_regulations/executive_council",
+        element: ph("محاضر جلسات المجلس التنفيذي", "------"),
+      },
+      {
+        path: "documents_regulations/general_conference",
+        element: ph("محاضر جلسات المؤتمر العام", "------"),
+      },
+      {
+        path: "documents_regulations/regulations",
+        element: ph("الأنظمة واللوائح", "------"),
+      },
+
+      //==========================================================================
+      
       {
         path: "settings/current_year",
         element: <CurrentYearPage />,

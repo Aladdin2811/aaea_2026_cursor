@@ -60,7 +60,6 @@ export default function GenderTable() {
           ) : null
         }
         caption="جدول نوع الجنس"
-        maxHeight="min(70dvh, 600px)"
         density="comfortable"
         minTableWidth="100%"
       />

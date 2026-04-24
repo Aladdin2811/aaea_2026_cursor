@@ -56,10 +56,10 @@ export function AppSidebar({
       />
 
       <aside
-        className={`fixed inset-y-0 start-0 z-50 flex h-dvh shrink-0 flex-col border-e border-slate-200/80 bg-white shadow-xl shadow-slate-200/50 max-lg:w-[min(100%,14rem)] max-lg:transition-transform max-lg:duration-300 max-lg:ease-in-out lg:static lg:z-0 lg:h-dvh lg:min-w-0 lg:w-full lg:overflow-hidden lg:border-s-0 lg:border-e lg:shadow-none lg:transition-[max-width,opacity,border-color] lg:duration-300 lg:ease-in-out ${mobileSlide} ${desktopCollapse}`}
+        className={`fixed inset-y-0 start-0 z-50 flex h-dvh max-h-dvh min-h-0 shrink-0 flex-col overflow-hidden border-e border-slate-200/80 bg-white shadow-xl shadow-slate-200/50 max-lg:w-[min(100%,14rem)] max-lg:transition-transform max-lg:duration-300 max-lg:ease-in-out lg:static lg:z-0 lg:h-dvh lg:min-w-0 lg:w-full lg:border-s-0 lg:border-e lg:shadow-none lg:transition-[max-width,opacity,border-color] lg:duration-300 lg:ease-in-out ${mobileSlide} ${desktopCollapse}`}
         aria-label="التنقل الرئيسي"
       >
-        <div className="flex h-full min-h-0 w-full min-w-0 flex-col lg:w-56 lg:min-w-56 lg:shrink-0">
+        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col lg:w-56 lg:min-w-56 lg:shrink-0">
           <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-4">
             <div className="flex min-w-0 items-center gap-2">
               <img
@@ -87,7 +87,7 @@ export function AppSidebar({
           </div>
 
           <nav
-            className="flex-1 space-y-1.5 overflow-y-auto overflow-x-hidden p-2"
+            className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overflow-x-hidden overscroll-y-contain p-2"
             aria-label="القائمة الرئيسية"
           >
           {navGroups.map((group) => {
@@ -99,7 +99,7 @@ export function AppSidebar({
             return (
               <div
                 key={group.id}
-                className="rounded-xl border border-slate-100/90 bg-slate-50/40 shadow-sm shadow-slate-100/80"
+                className="min-h-0 rounded-xl border border-slate-100/90 bg-slate-50/40 shadow-sm shadow-slate-100/80"
               >
                 <button
                   type="button"
@@ -140,11 +140,11 @@ export function AppSidebar({
                   id={panelId}
                   role="region"
                   aria-labelledby={`${baseId}-${group.id}-btn`}
-                  className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+                  className={`grid min-h-0 transition-[grid-template-rows] duration-200 ease-out ${
                     expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
                   }`}
                 >
-                  <div className="overflow-hidden">
+                  <div className="min-h-0 overflow-hidden">
                     <ul className="space-y-0.5 border-t border-slate-100/90 bg-white/70 px-1.5 py-1.5">
                       {group.children.map((child) => (
                         <li key={`${group.id}-${child.to}`}>
