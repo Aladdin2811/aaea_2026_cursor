@@ -30,7 +30,7 @@ const columns: DataTableColumn<EmployeesBasicSalariesRow>[] = [
   {
     id: "category",
     header: "الفئة",
-    className: "min-w-32",
+    className: "min-w-25",
     thClassName: "!whitespace-normal",
     cell: (row) => (
       <span className="block min-w-0 text-slate-900">
@@ -43,15 +43,14 @@ const columns: DataTableColumn<EmployeesBasicSalariesRow>[] = [
   {
     id: "grade",
     header: "الدرجة",
-    className: "min-w-32",
+    className: "min-w-40",
     thClassName: "!whitespace-normal",
     cell: (row) => (
       <span className="block min-w-0 text-slate-900">
         {formatOptionalText(firstEmbed(row.job_grade)?.job_grade_name)}
       </span>
     ),
-    getSortValue: (r) =>
-      stringValue(firstEmbed(r.job_grade)?.job_grade_name),
+    getSortValue: (r) => stringValue(firstEmbed(r.job_grade)?.job_grade_name),
   },
   {
     id: "basic_first",

@@ -10,6 +10,9 @@ export type VacationsBalancesEmployeeEmbed = {
   id: number;
   fingerprint_id: number;
   employee_name: string | null;
+  job_nature_id: number | null;
+  job_category_id: number | null;
+  job_grade_id: number | null;
 };
 
 export type VacationsBalancesRow = {
@@ -58,7 +61,7 @@ const selectVacationsBalancesEmbed = `
   adventitious,
   sick,
   years ( id, year_num, status ),
-  all_employees ( id, fingerprint_id, employee_name )
+  all_employees ( id, fingerprint_id, employee_name, job_nature_id, job_category_id, job_grade_id )
 `;
 
 function parseNumericId(

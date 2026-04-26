@@ -10,13 +10,14 @@ export type UserProfileRow = {
   id: string;
   email: string | null;
   full_name: string;
+  job_name: string | null;
   role_id: number | null;
   created_at: string;
   roles: UserProfileRole | null;
 };
 
 const profileSelect =
-  "id, email, full_name, role_id, created_at, roles!user_profiles_role_id_fkey ( id, role_name, description )";
+  "id, email, full_name, job_name, role_id, created_at, roles!user_profiles_role_id_fkey ( id, role_name, description )";
 
 export async function listUserProfiles(): Promise<UserProfileRow[]> {
   const { data, error } = await supabase
@@ -60,6 +61,30 @@ export async function getUserProfileForUser(
     ...row,
     roles: Array.isArray(row.roles) ? row.roles[0] ?? null : row.roles,
   };
+}
+
+export async function getUserProfilesByIds(
+  userIds: string[],
+): Promise<UserProfileRow[]> {
+  const idSet = Array.from(
+    new Set(userIds.filter((u) => typeof u === "string" && u.length > 0)),
+  );
+  if (idSet.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .select(profileSelect)
+    .in("id", idSet);
+
+  if (error) {
+    console.error("Supabase user_profiles in:", error);
+    throw new Error("تعذر تحميل بيانات المستخدمين");
+  }
+  const rows = (data as unknown as UserProfileRow[] | null) ?? [];
+  return rows.map((r) => ({
+    ...r,
+    roles: Array.isArray(r.roles) ? r.roles[0] ?? null : r.roles,
+  }));
 }
 
 export async function updateUserProfileRole(

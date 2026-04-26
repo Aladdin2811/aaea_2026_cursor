@@ -4,6 +4,9 @@ export type EmployeesBanksEmployeeEmbed = {
   id: number;
   fingerprint_id: number;
   employee_name: string | null;
+  job_category_id: number | null;
+  job_grade_id: number | null;
+  retired: boolean | null;
 };
 
 export type EmployeesBanksRow = {
@@ -42,7 +45,7 @@ const selectEmployeesBanksEmbed = `
   bank_name,
   bank_account_no,
   status,
-  all_employees!employees_banks_employee_id_fkey ( id, fingerprint_id, employee_name )
+  all_employees!employees_banks_employee_id_fkey ( id, fingerprint_id, employee_name, job_category_id, job_grade_id, retired )
 `;
 
 function parseNumericId(

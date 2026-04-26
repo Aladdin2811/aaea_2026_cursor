@@ -32,6 +32,12 @@ import BasicSalariesPage from "../pages/salaries/BasicSalariesPage";
 import AllowancesPage from "../pages/allowances/AllowancesPage";
 import CertifiedProgramsPage from "../pages/programs/CertifiedProgramsPage.tsx";
 import Test from "../pages/Test.tsx";
+import { NotFoundPage } from "../pages/NotFoundPage";
+import EmployeesPage from "../pages/employees/EmployeesPage.tsx";
+import VacationTypePage from "../pages/vacations/VacationTypePage.tsx";
+import VacationsBalancesPage from "../pages/vacations/VacationsBalancesPage.tsx";
+import VacationsPage from "../pages/vacations/VacationsPage.tsx";
+import EmployeesBanksPage from "../pages/employees/EmployeesBanksPage.tsx";
 
 const ph = (title: string, description: string) => (
   <PlaceholderPage title={title} description={description} />
@@ -203,23 +209,23 @@ export const router = createBrowserRouter([
       },
       {
         path: "administrative_management/employees",
-        element: ph("الموظفين", "------"),
+        element: <EmployeesPage />,
       },
       {
         path: "administrative_management/employees_banks",
-        element: ph("الحسابات البنكية للموظفين", "------"),
+        element: <EmployeesBanksPage />,
       },
       {
         path: "administrative_management/vacation_type",
-        element: ph("أنواع الإجازات", "------"),
+        element: <VacationTypePage />,
       },
       {
         path: "administrative_management/vacations_balances",
-        element: ph("أرصدة الإجازات", "------"),
+        element: <VacationsBalancesPage />,
       },
       {
         path: "administrative_management/vacations",
-        element: ph("الإجازات الممنوحة", "------"),
+        element: <VacationsPage />,
       },
       {
         path: "administrative_management/deduction_from_salary",
@@ -259,43 +265,43 @@ export const router = createBrowserRouter([
         path: "social_security/social_security_expenses_statement",
         element: ph("كشف مصروفات التعويض الصحي", "------"),
       },
-            {
+      {
         path: "social_security/social_security_contribution",
         element: ph("نسب المساهمة", "------"),
       },
-                  {
+      {
         path: "social_security/social_security_class_category",
         element: ph("تصنيف وفئات المستفيدين بالضمان", "------"),
       },
-                        {
+      {
         path: "social_security/social_security_band",
         element: ph("بنود الضمان", "------"),
       },
-                              {
+      {
         path: "social_security/social_security_percentage",
         element: ph("نسب تعويض الضمان", "------"),
       },
-                              {
+      {
         path: "social_security/social_security_band_percentage",
         element: ph("نسب تعويض بنود الضمان", "------"),
       },
-                                    {
+      {
         path: "social_security/social_security_band_limit",
         element: ph("أسقف التعويض لبنود الضمان", "------"),
       },
-                                          {
+      {
         path: "social_security/social_security_contractors_repayment",
         element: ph("نسب تعويض المتعاقدين بالضمان", "------"),
       },
-                                                {
+      {
         path: "social_security/social_security_situations",
         element: ph("الحالات الإجتماعية للضمان", "------"),
       },
-                                                {
+      {
         path: "social_security/social_security_currency",
         element: ph("العملات المتعامل بها", "------"),
       },
-                                                      {
+      {
         path: "social_security/social_security_currency_rate",
         element: ph("سعر الصرف للضمان", "------"),
       },
@@ -423,7 +429,7 @@ export const router = createBrowserRouter([
       },
 
       //==========================================================================
-      
+
       {
         path: "settings/current_year",
         element: <CurrentYearPage />,
@@ -515,6 +521,10 @@ export const router = createBrowserRouter([
       {
         path: "settings/gender",
         element: <GenderPage />,
+      },
+      {
+        path: "*",
+        element: <NotFoundPage />,
       },
     ],
   },
