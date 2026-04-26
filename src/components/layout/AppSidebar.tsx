@@ -42,7 +42,7 @@ export function AppSidebar({
 
   /** على lg: انكماش/توسيع بـ max-width ليعمل الاختفاء والظهور بنفس سلاسة التوسيع */
   const desktopCollapse = desktopVisible
-    ? "lg:max-w-[14rem] lg:border-slate-200/80 lg:opacity-100 lg:pointer-events-auto"
+    ? "lg:max-w-60 lg:border-slate-200/80 lg:opacity-100 lg:pointer-events-auto"
     : "lg:max-w-0 lg:border-transparent lg:opacity-0 lg:pointer-events-none";
 
   return (
@@ -56,10 +56,10 @@ export function AppSidebar({
       />
 
       <aside
-        className={`fixed inset-y-0 start-0 z-50 flex h-dvh max-h-dvh min-h-0 shrink-0 flex-col overflow-hidden border-e border-slate-200/80 bg-white shadow-xl shadow-slate-200/50 max-lg:w-[min(100%,14rem)] max-lg:transition-transform max-lg:duration-300 max-lg:ease-in-out lg:static lg:z-0 lg:h-dvh lg:min-w-0 lg:w-full lg:border-s-0 lg:border-e lg:shadow-none lg:transition-[max-width,opacity,border-color] lg:duration-300 lg:ease-in-out ${mobileSlide} ${desktopCollapse}`}
+        className={`fixed inset-y-0 start-0 z-50 flex h-dvh max-h-dvh min-h-0 shrink-0 flex-col overflow-hidden border-e border-slate-200/80 bg-white shadow-xl shadow-slate-200/50 max-lg:w-[min(100%,15rem)] max-lg:transition-transform max-lg:duration-300 max-lg:ease-in-out lg:static lg:z-0 lg:h-dvh lg:min-w-0 lg:w-full lg:border-s-0 lg:border-e lg:shadow-none lg:transition-[max-width,opacity,border-color] lg:duration-300 lg:ease-in-out ${mobileSlide} ${desktopCollapse}`}
         aria-label="التنقل الرئيسي"
       >
-        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col lg:w-56 lg:min-w-56 lg:shrink-0">
+        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col lg:w-60 lg:min-w-60 lg:shrink-0">
           <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-3 py-4">
             <div className="flex min-w-0 items-center gap-2">
               <img

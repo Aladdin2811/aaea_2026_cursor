@@ -1,46 +1,58 @@
 import { supabase } from "../lib/supabase";
-import type { MonthsRow } from "./apiMonths";
-import type { YearsRow } from "./apiYears";
 
 export type ExchangeRatesRow = {
   id: number;
-  exchange_rate_day: string | null;
-  usd: number | null;
-  eur: number | null;
-  exchange_rate_month: number | null;
-  exchange_rate_year: number | null;
-  months: MonthsRow | null;
-  years: YearsRow | null;
+  exchange_rate_day: string;
+  usd: string | number;
+  eur: string | number;
+  year: number;
 };
 
-const selectExchangeRatesWithRelations = `
+const selectExchangeRatesColumns = `
   id,
   exchange_rate_day,
   usd,
   eur,
-  exchange_rate_month,
-  exchange_rate_year,
-  months (
-    id,
-    month_name1,
-    month_name2,
-    month_name3,
-    month_name4,
-    month_name5,
-    month_num,
-    days_count
-  ),
-  years (
-    id,
-    year_num,
-    status
-  )
+  year
 `;
+
+function parseNumericId(
+  value: number | string,
+  fieldLabel = "المعرّف",
+): number {
+  const n = typeof value === "string" ? Number(value) : value;
+  if (typeof n !== "number" || !Number.isFinite(n)) {
+    throw new Error(`${fieldLabel} غير صالح`);
+  }
+  return n;
+}
+
+/** يحوّل `years.id` إلى سنة ميلادية عبر `year_num` ليطابق عمود `exchange_rates.year`. */
+async function calendarYearFromYearsRowId(yearsRowId: number): Promise<number> {
+  const { data, error } = await supabase
+    .from("years")
+    .select("year_num")
+    .eq("id", yearsRowId)
+    .single();
+
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن تحديد السنة المحاسبية");
+  }
+  if (data?.year_num == null || String(data.year_num).trim() === "") {
+    throw new Error("السنة المحاسبية غير معرّفة");
+  }
+  const n = Number.parseInt(String(data.year_num).trim(), 10);
+  if (!Number.isFinite(n)) {
+    throw new Error("تنسيق سنة غير صالح");
+  }
+  return n;
+}
 
 export async function getAll(): Promise<ExchangeRatesRow[]> {
   const { data, error } = await supabase
     .from("exchange_rates")
-    .select(selectExchangeRatesWithRelations)
+    .select(selectExchangeRatesColumns)
     .order("exchange_rate_day", { ascending: false });
 
   if (error) {
@@ -50,25 +62,17 @@ export async function getAll(): Promise<ExchangeRatesRow[]> {
   return (data as unknown as ExchangeRatesRow[] | null) ?? [];
 }
 
-export type ExchangeRateBriefRow = {
-  id: number;
-  exchange_rate_day: string | null;
-  usd: number | null;
-  eur: number | null;
-  exchange_rate_month: number | null;
-  exchange_rate_year: number | null;
-};
-
-const selectExchangeRateBrief =
-  "id, exchange_rate_day, usd, eur, exchange_rate_month, exchange_rate_year";
+export type ExchangeRateBriefRow = ExchangeRatesRow;
 
 export async function getCurrencyRateByYear(
   yearId: number,
 ): Promise<ExchangeRatesRow[]> {
+  const calendarYear = await calendarYearFromYearsRowId(yearId);
+
   const { data, error } = await supabase
     .from("exchange_rates")
-    .select(selectExchangeRatesWithRelations)
-    .eq("exchange_rate_year", yearId)
+    .select(selectExchangeRatesColumns)
+    .eq("year", calendarYear)
     .order("exchange_rate_day", { ascending: false });
 
   if (error) {
@@ -83,7 +87,7 @@ export async function getCurrencyRateByDay(
 ): Promise<ExchangeRateBriefRow[]> {
   const { data, error } = await supabase
     .from("exchange_rates")
-    .select(selectExchangeRateBrief)
+    .select(selectExchangeRatesColumns)
     .eq("exchange_rate_day", day);
 
   if (error) {
@@ -96,7 +100,7 @@ export async function getCurrencyRateByDay(
 export async function getLastCurrencyRate(): Promise<ExchangeRateBriefRow[]> {
   const { data, error } = await supabase
     .from("exchange_rates")
-    .select(selectExchangeRateBrief)
+    .select(selectExchangeRatesColumns)
     .order("exchange_rate_day", { ascending: false })
     .limit(1);
 
@@ -107,8 +111,10 @@ export async function getLastCurrencyRate(): Promise<ExchangeRateBriefRow[]> {
   return (data as unknown as ExchangeRateBriefRow[] | null) ?? [];
 }
 
-export type CreateExchangeRatePayload = Record<string, unknown> & {
+export type CreateExchangeRatePayload = {
   exchange_rate_day: string;
+  usd: string | number;
+  eur: string | number;
 };
 
 export async function createCurrencyRate(
@@ -141,29 +147,15 @@ export async function createCurrencyRate(
     );
   }
 
-  const { data: maxData, error: maxError } = await supabase
-    .from("exchange_rates")
-    .select("id")
-    .order("id", { ascending: false })
-    .limit(1);
-
-  if (maxError) {
-    console.error("Supabase error getting max id:", maxError);
-    throw new Error("حدث خطأ أثناء جلب أكبر قيمة للـ id");
-  }
-
-  const nextId = maxData?.length ? maxData[0].id + 1 : 1;
-
   const recordToInsert = {
-    id: nextId,
     ...newCurrencyRate,
     year,
   };
 
   const { data, error } = await supabase
     .from("exchange_rates")
-    .insert([recordToInsert])
-    .select(selectExchangeRateBrief)
+    .insert(recordToInsert)
+    .select(selectExchangeRatesColumns)
     .single();
 
   if (error) {
@@ -171,4 +163,61 @@ export async function createCurrencyRate(
     throw new Error("حدث خطأ عند تسجيل أسعار الصرف الجديدة");
   }
   return data as unknown as ExchangeRateBriefRow;
+}
+
+export async function getExchangeRateById(
+  id: number | string,
+): Promise<ExchangeRatesRow> {
+  const rowId = parseNumericId(id, "رقم السجل");
+
+  const { data, error } = await supabase
+    .from("exchange_rates")
+    .select(selectExchangeRatesColumns)
+    .eq("id", rowId)
+    .single();
+
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن الحصول على سعر الصرف");
+  }
+  return data as unknown as ExchangeRatesRow;
+}
+
+export type UpdateExchangeRatePayload = Partial<
+  Pick<ExchangeRatesRow, "exchange_rate_day" | "usd" | "eur" | "year">
+>;
+
+export async function updateExchangeRate(
+  id: number | string,
+  patch: UpdateExchangeRatePayload,
+): Promise<ExchangeRatesRow> {
+  const rowId = parseNumericId(id, "رقم السجل");
+
+  const { data, error } = await supabase
+    .from("exchange_rates")
+    .update({ ...patch })
+    .eq("id", rowId)
+    .select(selectExchangeRatesColumns)
+    .single();
+
+  if (error) {
+    console.error(error);
+    throw new Error("حدث خطأ عند تعديل سعر الصرف");
+  }
+  return data as unknown as ExchangeRatesRow;
+}
+
+export async function deleteExchangeRate(id: number | string): Promise<unknown> {
+  const rowId = parseNumericId(id, "رقم السجل");
+
+  const { data, error } = await supabase
+    .from("exchange_rates")
+    .delete()
+    .eq("id", rowId);
+
+  if (error) {
+    console.error("Supabase error:", error);
+    throw new Error("حدث خطأ عند حذف سعر الصرف");
+  }
+  return data;
 }

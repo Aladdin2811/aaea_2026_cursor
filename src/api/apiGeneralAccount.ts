@@ -8,6 +8,8 @@ export type GeneralAccountRow = {
   description: string | null;
   notes: string | null;
   status: boolean | null;
+  sort: number | null;
+  nature_of_account: number | null;
 };
 
 /** صف مُرتبط من `account_type` عند الاستعلام */
@@ -21,6 +23,8 @@ export type GeneralAccountWithType = GeneralAccountRow & {
   account_type: AccountTypeEmbed | AccountTypeEmbed[] | null;
 };
 
+const tableName = "general_account" as const;
+
 const selectWithType = `
   id, 
   general_account_name, 
@@ -29,6 +33,8 @@ const selectWithType = `
   description, 
   notes,
   status,
+  sort,
+  nature_of_account,
   account_type (
     id, 
     account_type_name
@@ -55,9 +61,10 @@ export async function getAll(
   const id = parseNumericId(accountTypeId, "نوع الحساب");
 
   const { data, error } = await supabase
-    .from("general_account")
+    .from(tableName)
     .select(selectWithType)
     .eq("account_type_id", id)
+    .order("sort", { ascending: true, nullsFirst: false })
     .order("id", { ascending: true });
 
   if (error) {
@@ -69,8 +76,9 @@ export async function getAll(
 
 export async function getAllNoId(): Promise<GeneralAccountWithType[]> {
   const { data, error } = await supabase
-    .from("general_account")
+    .from(tableName)
     .select(selectWithType)
+    .order("sort", { ascending: true, nullsFirst: false })
     .order("id", { ascending: true });
 
   if (error) {
@@ -86,7 +94,7 @@ export async function getById(
   const rowId = parseNumericId(id, "رقم الحساب العام");
 
   const { data, error } = await supabase
-    .from("general_account")
+    .from(tableName)
     .select(selectWithType)
     .eq("id", rowId)
     .single();

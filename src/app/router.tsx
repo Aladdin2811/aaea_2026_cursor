@@ -1,8 +1,8 @@
 import { createBrowserRouter } from "react-router-dom";
-import { RequireAuth } from "../components/auth/RequireAuth";
+import ProtectedRoute from "./ProtectedRoute.tsx";
 import { AppLayout } from "../layouts/AppLayout";
 import { DashboardPage } from "../pages/DashboardPage";
-import { LoginPage } from "../pages/LoginPage";
+import Login from "../pages/Login.tsx";
 import { MembersPage } from "../pages/MembersPage";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
 import AccountTypePage from "../pages/accounts/AccountTypePage";
@@ -23,12 +23,15 @@ import ExchangeDocumentTypePage from "../pages/exchangeDocumentType/ExchangeDocu
 import ExchangeRatesPage from "../pages/exchangeRates/ExchangeRatesPage";
 import CurrencyPage from "../pages/currency/CurrencyPage";
 import RolesPage from "../pages/roles/RolesPage";
+import UsersPage from "../pages/users/UsersPage.tsx";
 import SocialSituationsPage from "../pages/socialSituations/SocialSituationsPage";
 import ExpatriatePage from "../pages/expatriate/ExpatriatePage";
 import GenderPage from "../pages/gender/GenderPage";
 import JobsPage from "../pages/jobs/JobsPage";
 import BasicSalariesPage from "../pages/salaries/BasicSalariesPage";
 import AllowancesPage from "../pages/allowances/AllowancesPage";
+import CertifiedProgramsPage from "../pages/programs/CertifiedProgramsPage.tsx";
+import Test from "../pages/Test.tsx";
 
 const ph = (title: string, description: string) => (
   <PlaceholderPage title={title} description={description} />
@@ -37,17 +40,21 @@ const ph = (title: string, description: string) => (
 export const router = createBrowserRouter([
   {
     path: "/login",
-    element: <LoginPage />,
+    element: <Login />,
   },
   {
     path: "/",
     element: (
-      <RequireAuth>
+      <ProtectedRoute>
         <AppLayout />
-      </RequireAuth>
+      </ProtectedRoute>
     ),
     children: [
       { index: true, element: <DashboardPage /> },
+      {
+        path: "test",
+        element: <Test />,
+      },
       {
         path: "dashboard/summary",
         element: ph(
@@ -95,7 +102,7 @@ export const router = createBrowserRouter([
 
       {
         path: "programs/certified_programs",
-        element: ph("الأنشطة المعتمدة", "------"),
+        element: <CertifiedProgramsPage />,
       },
       {
         path: "programs/programs_type",
@@ -491,7 +498,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "settings/users",
-        element: ph("المستخدمين", "------"),
+        element: <UsersPage />,
       },
       {
         path: "settings/roles",

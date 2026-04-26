@@ -26,6 +26,9 @@ export type No3Row = {
   salariesdirectpaid: boolean | null;
   no3_journal_show: boolean | null;
   status: boolean | null;
+  sort: number | null;
+  nature_of_account: number | null;
+  member_id: number | null;
 };
 
 export type No3WithRelations = No3Row & {
@@ -34,6 +37,25 @@ export type No3WithRelations = No3Row & {
   bab: BabEmbed | BabEmbed[] | null;
   band: No3BandEmbed | No3BandEmbed[] | null;
 };
+
+/** شكل العلاقة المضمّنة في استعلامات أخرى (`no3 (...)`) */
+export type No3Embedded = Pick<No3Row, "id" | "no3_name" | "no3_code">;
+
+export type CreateNo3Input = Partial<Omit<No3Row, "id">> & {
+  id?: number;
+};
+
+export type UpdateNo3Input = Partial<Omit<No3Row, "id">>;
+
+export type No3ByBandOptions = {
+  /**
+   * عند `false` يُرجع كل الصفوف بغض النظر عن `status`.
+   * الافتراضي `true` للتوافق مع السلوك السابق.
+   */
+  activeOnly?: boolean;
+};
+
+const tableName = "no3" as const;
 
 const selectNo3Embed = `
   id,
@@ -50,6 +72,9 @@ const selectNo3Embed = `
   salariesdirectpaid,
   no3_journal_show,
   status,
+  sort,
+  nature_of_account,
+  member_id,
   account_type ( id, account_type_name ),
   general_account ( id, general_account_name, general_account_code ),
   bab ( id, bab_name, bab_code ),
@@ -67,20 +92,41 @@ function parseNumericId(
   return n;
 }
 
+async function nextNo3Id(): Promise<number> {
+  const { data: maxData, error: maxError } = await supabase
+    .from(tableName)
+    .select("id")
+    .order("id", { ascending: false })
+    .limit(1);
+
+  if (maxError) {
+    console.error(maxError);
+    throw new Error("خطأ أثناء جلب أكبر معرّف للنوع");
+  }
+  return maxData != null && maxData.length > 0 ? Number(maxData[0].id) + 1 : 1;
+}
+
 /**
- * جلب الأنواع المرتبطة بـ `band_id`
+ * جلب الأنواع المرتبطة بـ `band_id` (افتراضياً النشطة فقط: `status === true`).
  */
 export async function getAll(
   bandId: number | string,
+  options?: No3ByBandOptions,
 ): Promise<No3WithRelations[]> {
   const id = parseNumericId(bandId, "البند");
 
-  const { data, error } = await supabase
-    .from("no3")
+  let query = supabase
+    .from(tableName)
     .select(selectNo3Embed)
     .eq("band_id", id)
-    .eq("status", true)
+    .order("sort", { ascending: true, nullsFirst: false })
     .order("id", { ascending: true });
+
+  if (options?.activeOnly !== false) {
+    query = query.eq("status", true);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Supabase error:", error);
@@ -91,28 +137,16 @@ export async function getAll(
 
 export async function getForSelect(
   bandId: number | string,
+  options?: No3ByBandOptions,
 ): Promise<No3WithRelations[]> {
-  const id = parseNumericId(bandId, "البند");
-
-  const { data, error } = await supabase
-    .from("no3")
-    .select(selectNo3Embed)
-    .eq("band_id", id)
-    .eq("status", true)
-    .order("id", { ascending: true });
-
-  if (error) {
-    console.error("Supabase error:", error);
-    throw new Error("لا يمكن الحصول على بيانات الأنواع");
-  }
-  return (data as unknown as No3WithRelations[] | null) ?? [];
+  return getAll(bandId, options);
 }
 
 export async function getById(id: number | string): Promise<No3WithRelations> {
   const rowId = parseNumericId(id, "رقم النوع");
 
   const { data, error } = await supabase
-    .from("no3")
+    .from(tableName)
     .select(selectNo3Embed)
     .eq("id", rowId)
     .single();
@@ -122,4 +156,79 @@ export async function getById(id: number | string): Promise<No3WithRelations> {
     throw new Error("لا يمكن الحصول على بيانات النوع");
   }
   return data as unknown as No3WithRelations;
+}
+
+export async function createNo3(input: CreateNo3Input): Promise<No3WithRelations> {
+  const { id: explicitId, ...fields } = input;
+  const nextId =
+    explicitId != null && Number.isFinite(Number(explicitId))
+      ? Number(explicitId)
+      : await nextNo3Id();
+
+  const { data, error } = await supabase
+    .from(tableName)
+    .insert({ id: nextId, ...fields })
+    .select(selectNo3Embed)
+    .single();
+
+  if (error) {
+    console.error("Supabase error:", error);
+    throw new Error(error.message || "لا يمكن تسجيل النوع");
+  }
+  return data as unknown as No3WithRelations;
+}
+
+export async function updateNo3(
+  id: number | string,
+  patch: UpdateNo3Input,
+): Promise<No3WithRelations> {
+  const rowId = parseNumericId(id, "رقم النوع");
+
+  const { data, error } = await supabase
+    .from(tableName)
+    .update({ ...patch })
+    .eq("id", rowId)
+    .select(selectNo3Embed)
+    .single();
+
+  if (error) {
+    console.error(error);
+    throw new Error("حدث خطأ عند تعديل النوع");
+  }
+  return data as unknown as No3WithRelations;
+}
+
+export async function deleteNo3(id: number | string): Promise<unknown> {
+  const rowId = parseNumericId(id, "رقم النوع");
+
+  const { data, error } = await supabase
+    .from(tableName)
+    .delete()
+    .eq("id", rowId);
+
+  if (error) {
+    console.error("Supabase error:", error);
+    throw new Error("حدث خطأ عند حذف النوع");
+  }
+  return data;
+}
+
+export type No3BriefRow = Pick<No3Row, "id" | "no3_name" | "no3_code">;
+
+const selectNo3Brief = "id, no3_name, no3_code";
+
+/** أنواع مفعّلة مرتبطة بالبرامج (`haveprograms`) — قوائم الأنشطة المعتمدة وغيرها */
+export async function getActiveWithProgramsFlag(): Promise<No3BriefRow[]> {
+  const { data, error } = await supabase
+    .from(tableName)
+    .select(selectNo3Brief)
+    .eq("status", true)
+    .eq("haveprograms", true)
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error("Supabase error:", error);
+    throw new Error("لا يمكن الحصول على أنواع الأنشطة");
+  }
+  return (data as unknown as No3BriefRow[] | null) ?? [];
 }

@@ -6,13 +6,13 @@ import {
   DataTable,
   type DataTableColumn,
 } from "../../components/ui/data-table";
-import { formatOptionalText, stringValue } from "../../lib/displayValue";
+import { formatOptionalText } from "../../lib/displayValue";
 import DecimalConverter from "../../utils/DecimalConverter";
 import { useFetchExchangeRatesByYear } from "./useExchangeRates";
 import { useExchangeRatesYearFromLocation } from "./useExchangeRatesYearFromLocation";
 
-function formatRateDate(value: string | null): string {
-  if (value == null || String(value).trim() === "") return "—";
+function formatRateDate(value: string): string {
+  if (String(value).trim() === "") return "—";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return formatOptionalText(value);
   return new Intl.DateTimeFormat("ar-SA-u-ca-gregory", {
@@ -22,28 +22,23 @@ function formatRateDate(value: string | null): string {
   }).format(d);
 }
 
-function rateDaySortValue(value: string | null): number {
-  if (value == null || String(value).trim() === "") return 0;
+function rateDaySortValue(value: string): number {
+  if (String(value).trim() === "") return 0;
   const t = new Date(value).getTime();
   return Number.isNaN(t) ? 0 : t;
 }
 
 function monthLabel(row: ExchangeRatesRow): string {
-  const name = row.months?.month_name1;
-  if (name != null && String(name).trim() !== "") return String(name);
-  if (row.exchange_rate_month != null) {
-    return `معرّف شهر ${row.exchange_rate_month}`;
-  }
-  return "—";
+  if (String(row.exchange_rate_day).trim() === "") return "—";
+  const d = new Date(row.exchange_rate_day);
+  if (Number.isNaN(d.getTime())) return "—";
+  return new Intl.DateTimeFormat("ar-SA-u-ca-gregory", {
+    month: "long",
+  }).format(d);
 }
 
 function yearLabel(row: ExchangeRatesRow): string {
-  const y = row.years?.year_num;
-  if (y != null && String(y).trim() !== "") return String(y);
-  if (row.exchange_rate_year != null) {
-    return `معرّف سنة ${row.exchange_rate_year}`;
-  }
-  return "—";
+  return String(row.year);
 }
 
 const columns: DataTableColumn<ExchangeRatesRow>[] = [
@@ -69,8 +64,7 @@ const columns: DataTableColumn<ExchangeRatesRow>[] = [
         {monthLabel(row)}
       </span>
     ),
-    getSortValue: (r) =>
-      stringValue(r.months?.month_name1 ?? r.exchange_rate_month),
+    getSortValue: (r) => monthLabel(r),
   },
   {
     id: "year",
@@ -82,7 +76,7 @@ const columns: DataTableColumn<ExchangeRatesRow>[] = [
         {yearLabel(row)}
       </span>
     ),
-    getSortValue: (r) => stringValue(r.years?.year_num ?? r.exchange_rate_year),
+    getSortValue: (r) => r.year,
     contentAlign: "center",
   },
   {
@@ -94,7 +88,7 @@ const columns: DataTableColumn<ExchangeRatesRow>[] = [
       <DecimalConverter
         number={row.usd}
         minimumFractionDigits={0}
-        maximumFractionDigits={4}
+        maximumFractionDigits={3}
         className="block min-w-0 font-medium tabular-nums text-slate-900"
       />
     ),
@@ -110,7 +104,7 @@ const columns: DataTableColumn<ExchangeRatesRow>[] = [
       <DecimalConverter
         number={row.eur}
         minimumFractionDigits={0}
-        maximumFractionDigits={4}
+        maximumFractionDigits={3}
         className="block min-w-0 font-medium tabular-nums text-slate-900"
       />
     ),

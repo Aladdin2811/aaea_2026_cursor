@@ -8,6 +8,12 @@ import { formatOptionalText, stringValue } from "../../../lib/displayValue";
 import DecimalConverter from "../../../utils/DecimalConverter";
 import { useFetchNatureOfWork } from "./useNatureOfWork";
 
+function sortNumericField(v: string | number | null | undefined): number {
+  if (v == null || v === "") return -Infinity;
+  const n = typeof v === "string" ? Number.parseFloat(v) : v;
+  return Number.isFinite(n) ? n : -Infinity;
+}
+
 const columns: DataTableColumn<NatureOfWorkRow>[] = [
   {
     id: "name",
@@ -32,7 +38,7 @@ const columns: DataTableColumn<NatureOfWorkRow>[] = [
         className="tabular-nums text-slate-900"
       />
     ),
-    getSortValue: (r) => r.nature_of_work_amount ?? -Infinity,
+    getSortValue: (r) => sortNumericField(r.nature_of_work_amount),
     contentAlign: "center",
   },
 ];

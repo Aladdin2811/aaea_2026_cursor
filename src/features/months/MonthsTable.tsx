@@ -7,6 +7,12 @@ import {
 import { stringValue } from "../../lib/displayValue";
 import { useFetchMonths } from "./useMonths";
 
+function sortMonthNum(v: string | null | undefined): number {
+  if (v == null || v === "") return -Infinity;
+  const n = Number.parseInt(String(v).trim(), 10);
+  return Number.isFinite(n) ? n : -Infinity;
+}
+
 const columns: DataTableColumn<MonthsRow>[] = [
   {
     id: "monthNum",
@@ -18,7 +24,7 @@ const columns: DataTableColumn<MonthsRow>[] = [
         {row.month_num != null ? String(row.month_num) : "—"}
       </span>
     ),
-    getSortValue: (r) => r.month_num ?? -1,
+    getSortValue: (r) => sortMonthNum(r.month_num),
     contentAlign: "center",
   },
   {

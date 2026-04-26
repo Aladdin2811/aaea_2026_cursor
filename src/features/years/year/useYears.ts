@@ -5,7 +5,7 @@ import {
   getActiveYears2,
   getAll,
   updateYear as updateYearAPI,
-  type YearUpdatePayload,
+  type UpdateYearsInput,
   type YearsRow,
 } from "../../../api/apiYears";
 
@@ -47,9 +47,9 @@ export function useUpdateYear() {
       updatedData,
       id,
     }: {
-      updatedData: YearUpdatePayload;
+      updatedData: UpdateYearsInput;
       id: number | string;
-    }) => updateYearAPI(updatedData, id),
+    }) => updateYearAPI(id, updatedData),
     onSuccess: () => {
       toast.success("تم تعديل بيانات السنة بنجاح");
       void queryClient.invalidateQueries({ queryKey: ["years"] });

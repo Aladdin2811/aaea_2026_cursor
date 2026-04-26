@@ -31,6 +31,10 @@ export type BandRow = {
   salariesdirectpaid: boolean | null;
   band_journal_show: boolean | null;
   status: boolean | null;
+  /** ترتيب العرض */
+  sort: number | null;
+  /** طبيعة الحساب */
+  nature_of_account: number | null;
 };
 
 export type BandWithRelations = BandRow & {
@@ -52,7 +56,9 @@ const selectBandEmbed = `
   directexchange, 
   salariesdirectpaid, 
   band_journal_show, 
-  status, 
+  status,
+  sort,
+  nature_of_account,
   account_type ( id, account_type_name ),
   general_account ( id, general_account_name, general_account_code ),
   bab ( id, bab_name, bab_code )
@@ -81,6 +87,7 @@ export async function getAll(
     .from("band")
     .select(selectBandEmbed)
     .eq("bab_id", id)
+    .order("sort", { ascending: true, nullsFirst: false })
     .order("id", { ascending: true });
 
   if (error) {
@@ -100,6 +107,7 @@ export async function getForSelect(
     .select(selectBandEmbed)
     .eq("bab_id", id)
     .eq("status", true)
+    .order("sort", { ascending: true, nullsFirst: false })
     .order("id", { ascending: true });
 
   if (error) {

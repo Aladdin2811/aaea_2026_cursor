@@ -1,5 +1,16 @@
 import { useMemo, type ReactNode } from "react";
 import { type LuggageAndFurnituresRow } from "../../../api/apiLuggageAndFurnitures";
+
+function firstEmbed<T>(v: T | T[] | null | undefined): T | null {
+  if (v == null) return null;
+  return Array.isArray(v) ? (v[0] ?? null) : v;
+}
+
+function sortNumericField(v: string | number | null | undefined): number {
+  if (v == null || v === "") return -Infinity;
+  const n = typeof v === "string" ? Number.parseFloat(v) : v;
+  return Number.isFinite(n) ? n : -Infinity;
+}
 import {
   DataTable,
   type DataTableColumn,
@@ -17,10 +28,13 @@ const columns: DataTableColumn<LuggageAndFurnituresRow>[] = [
     thClassName: "!whitespace-normal",
     cell: (row) => (
       <span className="block min-w-0 text-slate-900">
-        {formatOptionalText(row.job_category?.job_category_name)}
+        {formatOptionalText(
+          firstEmbed(row.job_category)?.job_category_name ?? null,
+        )}
       </span>
     ),
-    getSortValue: (r) => stringValue(r.job_category?.job_category_name),
+    getSortValue: (r) =>
+      stringValue(firstEmbed(r.job_category)?.job_category_name),
   },
   {
     id: "social",
@@ -29,11 +43,13 @@ const columns: DataTableColumn<LuggageAndFurnituresRow>[] = [
     thClassName: "!whitespace-normal",
     cell: (row) => (
       <span className="block min-w-0 text-slate-900">
-        {formatOptionalText(row.social_situations?.social_situation_name)}
+        {formatOptionalText(
+          firstEmbed(row.social_situations)?.social_situation_name ?? null,
+        )}
       </span>
     ),
     getSortValue: (r) =>
-      stringValue(r.social_situations?.social_situation_name),
+      stringValue(firstEmbed(r.social_situations)?.social_situation_name),
   },
   {
     id: "minimum",
@@ -46,7 +62,7 @@ const columns: DataTableColumn<LuggageAndFurnituresRow>[] = [
         className="tabular-nums text-slate-900"
       />
     ),
-    getSortValue: (r) => r.minimum ?? -Infinity,
+    getSortValue: (r) => sortNumericField(r.minimum),
     contentAlign: "center",
   },
   {
@@ -60,7 +76,7 @@ const columns: DataTableColumn<LuggageAndFurnituresRow>[] = [
         className="tabular-nums text-slate-900"
       />
     ),
-    getSortValue: (r) => r.maximum ?? -Infinity,
+    getSortValue: (r) => sortNumericField(r.maximum),
     contentAlign: "center",
   },
   // {

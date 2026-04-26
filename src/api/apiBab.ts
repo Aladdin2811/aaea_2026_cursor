@@ -10,6 +10,10 @@ export type BabRow = {
   havebudget: boolean | null;
   haveprograms: boolean | null;
   status: boolean | null;
+  sort: number | null;
+  nature_of_account: number | null;
+  bab_num: string | null;
+  bab_title: string | null;
 };
 
 export type AccountTypeEmbed = {
@@ -38,6 +42,10 @@ const selectBabEmbed = `
   havebudget, 
   haveprograms, 
   status,
+  sort,
+  nature_of_account,
+  bab_num,
+  bab_title,
   account_type (
     id, 
     account_type_name
@@ -72,6 +80,7 @@ export async function getAll(
     .from("bab")
     .select(selectBabEmbed)
     .eq("general_account_id", gid)
+    .order("sort", { ascending: true, nullsFirst: false })
     .order("id", { ascending: true });
 
   if (error) {
@@ -95,6 +104,7 @@ export async function getForSelect(
     .select(selectBabEmbed)
     .eq("general_account_id", gid)
     .eq("status", true)
+    .order("sort", { ascending: true, nullsFirst: false })
     .order("id", { ascending: true });
 
   if (error) {
@@ -118,11 +128,16 @@ export async function getBudgetBab(): Promise<BabWithRelations[]> {
       havebudget, 
       haveprograms, 
       status,
+      sort,
+      nature_of_account,
+      bab_num,
+      bab_title,
       account_type ( id, account_type_name ),
       general_account ( id, general_account_code, general_account_name )
       `,
     )
     .eq("havebudget", true)
+    .order("sort", { ascending: true, nullsFirst: false })
     .order("id", { ascending: true });
 
   if (error) {

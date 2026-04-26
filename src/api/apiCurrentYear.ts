@@ -14,6 +14,8 @@ export type CurrentYearUpdatePayload = {
   year_id: number | null;
 };
 
+const tableName = "current_year" as const;
+
 const selectCurrentYear = `
   id,
   year_id,
@@ -21,11 +23,11 @@ const selectCurrentYear = `
 `;
 
 /**
- * صف السنة الحالية (جدول `current_year` — غالباً صف واحد).
+ * صف السنة الحالية (جدول `current_year` — يُفترض صف واحد أو يُؤخذ الأصغر `id`).
  */
 export async function getCurrentYear(): Promise<CurrentYearWithRelations | null> {
   const { data, error } = await supabase
-    .from("current_year")
+    .from(tableName)
     .select(selectCurrentYear)
     .order("id", { ascending: true })
     .limit(1)
@@ -39,15 +41,30 @@ export async function getCurrentYear(): Promise<CurrentYearWithRelations | null>
 }
 
 /**
- * تحديث السنة الحالية (المعرّف الثابت `id = 1` كما في مخططكم).
+ * تحديث صف السنة الحالية: الصف ذو أصغر `id` (بدون افتراض `id = 1`).
  */
 export async function updateCurrentYear(
   payload: CurrentYearUpdatePayload,
 ): Promise<CurrentYearWithRelations | null> {
+  const { data: existing, error: readError } = await supabase
+    .from(tableName)
+    .select("id")
+    .order("id", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (readError) {
+    console.error("Supabase error:", readError);
+    throw new Error("لا يمكن تحديد سجل السنة الحالية");
+  }
+  if (existing == null) {
+    throw new Error("لا يوجد صف مسجّل في جدول السنة الحالية");
+  }
+
   const { data, error } = await supabase
-    .from("current_year")
+    .from(tableName)
     .update(payload)
-    .eq("id", 1)
+    .eq("id", existing.id)
     .select(selectCurrentYear)
     .maybeSingle();
 

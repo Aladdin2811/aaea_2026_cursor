@@ -1,5 +1,10 @@
 import { useMemo, type ReactNode } from "react";
 import { type TravelAllowanceRow } from "../../../api/apiTravelAllowance";
+
+function firstEmbed<T>(v: T | T[] | null | undefined): T | null {
+  if (v == null) return null;
+  return Array.isArray(v) ? (v[0] ?? null) : v;
+}
 import {
   DataTable,
   type DataTableColumn,
@@ -17,10 +22,11 @@ const columns: DataTableColumn<TravelAllowanceRow>[] = [
     thClassName: "!whitespace-normal",
     cell: (row) => (
       <span className="block min-w-0 text-slate-900">
-        {formatOptionalText(row.job_nature?.job_nature_name)}
+        {formatOptionalText(firstEmbed(row.job_nature)?.job_nature_name)}
       </span>
     ),
-    getSortValue: (r) => stringValue(r.job_nature?.job_nature_name),
+    getSortValue: (r) =>
+      stringValue(firstEmbed(r.job_nature)?.job_nature_name),
   },
   {
     id: "category",
@@ -29,10 +35,11 @@ const columns: DataTableColumn<TravelAllowanceRow>[] = [
     thClassName: "!whitespace-normal",
     cell: (row) => (
       <span className="block min-w-0 text-slate-900">
-        {formatOptionalText(row.job_category?.job_category_name)}
+        {formatOptionalText(firstEmbed(row.job_category)?.job_category_name)}
       </span>
     ),
-    getSortValue: (r) => stringValue(r.job_category?.job_category_name),
+    getSortValue: (r) =>
+      stringValue(firstEmbed(r.job_category)?.job_category_name),
   },
   {
     id: "grade",
@@ -41,10 +48,11 @@ const columns: DataTableColumn<TravelAllowanceRow>[] = [
     thClassName: "!whitespace-normal",
     cell: (row) => (
       <span className="block min-w-0 text-slate-900">
-        {formatOptionalText(row.job_grade?.job_grade_name)}
+        {formatOptionalText(firstEmbed(row.job_grade)?.job_grade_name)}
       </span>
     ),
-    getSortValue: (r) => stringValue(r.job_grade?.job_grade_name),
+    getSortValue: (r) =>
+      stringValue(firstEmbed(r.job_grade)?.job_grade_name),
   },
   {
     id: "region",
@@ -53,10 +61,13 @@ const columns: DataTableColumn<TravelAllowanceRow>[] = [
     thClassName: "!whitespace-normal",
     cell: (row) => (
       <span className="block min-w-0 text-slate-900">
-        {formatOptionalText(row.world_regions?.world_region_name)}
+        {formatOptionalText(
+          firstEmbed(row.world_regions)?.world_region_name,
+        )}
       </span>
     ),
-    getSortValue: (r) => stringValue(r.world_regions?.world_region_name),
+    getSortValue: (r) =>
+      stringValue(firstEmbed(r.world_regions)?.world_region_name),
   },
   {
     id: "amount",
@@ -69,7 +80,12 @@ const columns: DataTableColumn<TravelAllowanceRow>[] = [
         className="tabular-nums text-slate-900"
       />
     ),
-    getSortValue: (r) => r.amount ?? -Infinity,
+    getSortValue: (r) => {
+      const a = r.amount;
+      if (a == null) return -Infinity;
+      const n = typeof a === "string" ? Number.parseFloat(a) : a;
+      return Number.isFinite(n) ? n : -Infinity;
+    },
     contentAlign: "center",
   },
   // {

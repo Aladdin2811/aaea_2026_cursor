@@ -1,6 +1,12 @@
 import { type ReactNode } from "react";
 import { type MemberRow } from "../../../api/apiMembers";
 import { DataTable, type DataTableColumn } from "../../../components/ui/data-table";
+
+function sortNumericField(v: string | number | null | undefined): number {
+  if (v == null || v === "") return -Infinity;
+  const n = typeof v === "string" ? Number.parseFloat(v) : v;
+  return Number.isFinite(n) ? n : -Infinity;
+}
 import { TableStatusBadge } from "../../../components/ui/TableStatusBadge";
 import { useFetchAllMembers } from "./useMembers";
 
@@ -27,14 +33,14 @@ const columns: DataTableColumn<MemberRow>[] = [
     cell: (row) => (
       <span className="tabular-nums text-slate-800">{row.member_ratio ?? "—"}</span>
     ),
-    getSortValue: (r) => r.member_ratio,
+    getSortValue: (r) => sortNumericField(r.member_ratio),
     contentAlign: "end",
   },
   {
     id: "reservation",
     header: "نسبة متحفظ عليها",
     cell: (row) => <span className="tabular-nums">{row.reservation_ratio ?? "—"}</span>,
-    getSortValue: (r) => r.reservation_ratio,
+    getSortValue: (r) => sortNumericField(r.reservation_ratio),
     contentAlign: "end",
   },
   {

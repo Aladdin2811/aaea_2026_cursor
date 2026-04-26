@@ -26,13 +26,16 @@ export type DetailedRow = {
   bab_id: number | null;
   band_id: number | null;
   no3_id: number | null;
-  main_topic_id: number | null;
   description: string | null;
   havebudget: boolean | null;
   haveprograms: boolean | null;
   directexchange: boolean | null;
   salariesdirectpaid: boolean | null;
   status: boolean | null;
+  main_topic_id: number | null;
+  sort: number | null;
+  member_id: number | null;
+  nature_of_account: number | null;
 };
 
 export type DetailedWithRelations = DetailedRow & {
@@ -43,6 +46,15 @@ export type DetailedWithRelations = DetailedRow & {
   no3: DetailedNo3Embed | DetailedNo3Embed[] | null;
   main_topics: MainTopicEmbed | MainTopicEmbed[] | null;
 };
+
+/** صف خفيف لقوائم الاختيار (بدون انضمامات ثقيلة) */
+export type DetailedBriefRow = {
+  id: number;
+  detailed_name: string | null;
+  detailed_code: string | null;
+};
+
+const selectDetailedBrief = "id, detailed_name, detailed_code";
 
 const selectDetailedEmbed = `
   id,
@@ -60,6 +72,9 @@ const selectDetailedEmbed = `
   salariesdirectpaid,
   status,
   main_topic_id,
+  sort,
+  member_id,
+  nature_of_account,
   account_type ( id, account_type_name ),
   general_account ( id, general_account_name, general_account_code ),
   bab ( id, bab_name, bab_code ),
@@ -92,6 +107,7 @@ export async function getAll(
     .select(selectDetailedEmbed)
     .eq("no3_id", id)
     .eq("status", true)
+    .order("sort", { ascending: true, nullsFirst: false })
     .order("id", { ascending: true });
 
   if (error) {
@@ -111,6 +127,7 @@ export async function getForSelect(
     .select(selectDetailedEmbed)
     .eq("no3_id", id)
     .eq("status", true)
+    .order("sort", { ascending: true, nullsFirst: false })
     .order("id", { ascending: true });
 
   if (error) {
@@ -118,6 +135,27 @@ export async function getForSelect(
     throw new Error("لا يمكن الحصول على بيانات الحسابات التفصيلية");
   }
   return (data as unknown as DetailedWithRelations[] | null) ?? [];
+}
+
+/** حسابات تفصيلية مفعّلة لنوع معيّن — للقوائم المنسدلة فقط */
+export async function getBriefForSelect(
+  no3Id: number | string,
+): Promise<DetailedBriefRow[]> {
+  const id = parseNumericId(no3Id, "النوع");
+
+  const { data, error } = await supabase
+    .from("detailed")
+    .select(selectDetailedBrief)
+    .eq("no3_id", id)
+    .eq("status", true)
+    .order("sort", { ascending: true, nullsFirst: false })
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error("Supabase error:", error);
+    throw new Error("لا يمكن الحصول على الحسابات التفصيلية");
+  }
+  return (data as unknown as DetailedBriefRow[] | null) ?? [];
 }
 
 export async function getById(

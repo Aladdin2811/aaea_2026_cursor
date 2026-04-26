@@ -1,5 +1,11 @@
 import { useMemo, type ReactNode } from "react";
 import { type JobGradeRow } from "../../../api/apiJobGrade";
+
+/** PostgREST قد يعيد علاقة واحدة ككائن أو كمصفوفة */
+function firstEmbed<T>(v: T | T[] | null | undefined): T | null {
+  if (v == null) return null;
+  return Array.isArray(v) ? (v[0] ?? null) : v;
+}
 import {
   DataTable,
   type DataTableColumn,
@@ -28,10 +34,13 @@ const columns: DataTableColumn<JobGradeRow>[] = [
     thClassName: "!whitespace-normal",
     cell: (row) => (
       <span className="block min-w-0 text-slate-800">
-        {formatOptionalText(row.job_nature?.job_nature_name)}
+        {formatOptionalText(
+          firstEmbed(row.job_nature)?.job_nature_name ?? null,
+        )}
       </span>
     ),
-    getSortValue: (r) => stringValue(r.job_nature?.job_nature_name),
+    getSortValue: (r) =>
+      stringValue(firstEmbed(r.job_nature)?.job_nature_name),
   },
   {
     id: "category",
@@ -40,10 +49,13 @@ const columns: DataTableColumn<JobGradeRow>[] = [
     thClassName: "!whitespace-normal",
     cell: (row) => (
       <span className="block min-w-0 text-slate-800">
-        {formatOptionalText(row.job_category?.job_category_name)}
+        {formatOptionalText(
+          firstEmbed(row.job_category)?.job_category_name ?? null,
+        )}
       </span>
     ),
-    getSortValue: (r) => stringValue(r.job_category?.job_category_name),
+    getSortValue: (r) =>
+      stringValue(firstEmbed(r.job_category)?.job_category_name),
   },
   // {
   //   id: "status",
