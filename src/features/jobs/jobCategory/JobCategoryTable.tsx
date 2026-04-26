@@ -8,8 +8,13 @@ import {
 import { formatOptionalText, stringValue } from "../../../lib/displayValue";
 import { useFetchJobCategory } from "./useJobCategory";
 
+function firstEmbed<T>(v: T | T[] | null | undefined): T | null {
+  if (v == null) return null;
+  return Array.isArray(v) ? (v[0] ?? null) : v;
+}
+
 function natureLabel(row: JobCategoryRow): string {
-  return formatOptionalText(row.job_nature?.job_nature_name);
+  return formatOptionalText(firstEmbed(row.job_nature)?.job_nature_name);
 }
 
 const columns: DataTableColumn<JobCategoryRow>[] = [
@@ -33,7 +38,8 @@ const columns: DataTableColumn<JobCategoryRow>[] = [
     cell: (row) => (
       <span className="block min-w-0 text-slate-800">{natureLabel(row)}</span>
     ),
-    getSortValue: (r) => stringValue(r.job_nature?.job_nature_name),
+    getSortValue: (r) =>
+      stringValue(firstEmbed(r.job_nature)?.job_nature_name),
   },
   {
     id: "description",

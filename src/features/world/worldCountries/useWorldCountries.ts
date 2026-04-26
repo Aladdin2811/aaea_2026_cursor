@@ -9,7 +9,7 @@ export function useFetchWorldCountries() {
   const { isLoading, data, error, isError } = useQuery<WorldCountryWithRelations[]>(
     {
       queryKey: ["world_countries"],
-      queryFn: getAll,
+      queryFn: () => getAll(),
       retry: false,
     },
   );

@@ -7,7 +7,7 @@ import {
 export function useFetchSocialSituations() {
   const { isLoading, data, error, isError } = useQuery<SocialSituationsRow[]>({
     queryKey: ["social_situations"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

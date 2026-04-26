@@ -9,7 +9,7 @@ export function useFetchContractorsBasicSalaries() {
     ContractorsBasicSalariesRow[]
   >({
     queryKey: ["contractors_basic_salaries"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

@@ -9,7 +9,7 @@ export function useFetchExpertsBasicSalaries() {
     ExpertsBasicSalariesRow[]
   >({
     queryKey: ["experts_basic_salaries"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

@@ -30,7 +30,7 @@ export function useCreateAccountType() {
 export function useFetchAccountType() {
   const { isLoading, data, error, isError } = useQuery<AccountTypeRow[]>({
     queryKey: ["account_type"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
   return { isLoading, data, error, isError };

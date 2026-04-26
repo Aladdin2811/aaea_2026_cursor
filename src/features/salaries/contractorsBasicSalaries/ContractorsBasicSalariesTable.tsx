@@ -9,6 +9,11 @@ import { formatOptionalText, stringValue } from "../../../lib/displayValue";
 import DecimalConverter from "../../../utils/DecimalConverter";
 import { useFetchContractorsBasicSalaries } from "./useContractorsBasicSalaries";
 
+function firstEmbed<T>(v: T | T[] | null | undefined): T | null {
+  if (v == null) return null;
+  return Array.isArray(v) ? (v[0] ?? null) : v;
+}
+
 const columns: DataTableColumn<ContractorsBasicSalariesRow>[] = [
   // {
   //   id: "nature",
@@ -29,10 +34,11 @@ const columns: DataTableColumn<ContractorsBasicSalariesRow>[] = [
     thClassName: "!whitespace-normal",
     cell: (row) => (
       <span className="block min-w-0 text-slate-900">
-        {formatOptionalText(row.job_category?.job_category_name)}
+        {formatOptionalText(firstEmbed(row.job_category)?.job_category_name)}
       </span>
     ),
-    getSortValue: (r) => stringValue(r.job_category?.job_category_name),
+    getSortValue: (r) =>
+      stringValue(firstEmbed(r.job_category)?.job_category_name),
   },
   {
     id: "basic_first",

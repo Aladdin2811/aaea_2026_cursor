@@ -4,7 +4,7 @@ import { getAll, type CurrencyRow } from "../../api/apiCurrency";
 export function useFetchCurrency() {
   const { isLoading, data, error, isError } = useQuery<CurrencyRow[]>({
     queryKey: ["currency"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

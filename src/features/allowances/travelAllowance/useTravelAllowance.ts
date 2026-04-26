@@ -7,7 +7,7 @@ import {
 export function useFetchTravelAllowance() {
   const { isLoading, data, error, isError } = useQuery<TravelAllowanceRow[]>({
     queryKey: ["travel_allowance"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

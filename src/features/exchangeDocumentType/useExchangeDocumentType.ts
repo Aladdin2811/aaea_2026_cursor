@@ -8,7 +8,7 @@ export function useFetchExchangeDocumentType() {
   const { isLoading, data, error, isError } = useQuery<ExchangeDocumentTypeRow[]>(
     {
       queryKey: ["exchange_document_type"],
-      queryFn: getAll,
+      queryFn: () => getAll(),
       retry: false,
     },
   );

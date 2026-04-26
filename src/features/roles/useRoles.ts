@@ -4,7 +4,7 @@ import { getAll, type RolesRow } from "../../api/apiRoles";
 export function useFetchRoles() {
   const { isLoading, data, error, isError } = useQuery<RolesRow[]>({
     queryKey: ["roles"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

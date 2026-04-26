@@ -12,7 +12,7 @@ import {
 export function useFetchYears() {
   const { isLoading, data, error, isError } = useQuery<YearsRow[]>({
     queryKey: ["years"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

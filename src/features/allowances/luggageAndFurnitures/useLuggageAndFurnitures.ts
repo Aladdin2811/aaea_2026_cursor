@@ -8,7 +8,7 @@ export function useFetchLuggageAndFurnitures() {
   const { isLoading, data, error, isError } = useQuery<LuggageAndFurnituresRow[]>(
     {
       queryKey: ["luggage_and_furnitures"],
-      queryFn: getAll,
+      queryFn: () => getAll(),
       retry: false,
     },
   );

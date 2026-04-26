@@ -7,7 +7,7 @@ import {
 export function useFetchWorldClassifications() {
   const { isLoading, data, error, isError } = useQuery<WorldClassificationRow[]>({
     queryKey: ["world_classifications"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

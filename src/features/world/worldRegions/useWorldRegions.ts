@@ -4,7 +4,7 @@ import { getAll, type WorldRegionRow } from "../../../api/apiWorldRegions";
 export function useFetchWorldRegions() {
   const { isLoading, data, error, isError } = useQuery<WorldRegionRow[]>({
     queryKey: ["world_regions"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

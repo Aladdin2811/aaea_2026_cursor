@@ -8,7 +8,7 @@ export function useFetchLivingCostIncrease() {
   const { isLoading, data, error, isError } = useQuery<LivingCostIncreaseRow[]>(
     {
       queryKey: ["living_cost_increase"],
-      queryFn: getAll,
+      queryFn: () => getAll(),
       retry: false,
     },
   );

@@ -4,7 +4,7 @@ import { getAll, type GenderRow } from "../../api/apiGender";
 export function useFetchGender() {
   const { isLoading, data, error, isError } = useQuery<GenderRow[]>({
     queryKey: ["gender"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

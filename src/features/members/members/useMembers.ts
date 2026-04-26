@@ -4,7 +4,7 @@ import { getAll, orgMember, type MemberRow } from "../../../api/apiMembers";
 export function useFetchAllMembers() {
   const { isLoading, data, error, isError } = useQuery<MemberRow[]>({
     queryKey: ["members", "all"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
   });
 
   return { isLoading, data, error, isError };

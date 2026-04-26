@@ -13,7 +13,7 @@ import {
 export function useFetchExchangeRates() {
   const { isLoading, data, error, isError } = useQuery<ExchangeRatesRow[]>({
     queryKey: ["all_exchange_rates"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

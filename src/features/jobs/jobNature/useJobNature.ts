@@ -4,7 +4,7 @@ import { getAll, type JobNatureRow } from "../../../api/apiJobNature";
 export function useFetchJobNature() {
   const { isLoading, data, error, isError } = useQuery<JobNatureRow[]>({
     queryKey: ["job_nature"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

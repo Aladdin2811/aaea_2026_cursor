@@ -9,7 +9,7 @@ export function useFetchExpatriationAllowance() {
     ExpatriationAllowanceRow[]
   >({
     queryKey: ["expatriation_allowance"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 

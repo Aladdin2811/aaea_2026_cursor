@@ -4,7 +4,7 @@ import { getAll, type MonthsRow } from "../../api/apiMonths";
 export function useFetchMonths() {
   const { isLoading, data, error, isError } = useQuery<MonthsRow[]>({
     queryKey: ["months"],
-    queryFn: getAll,
+    queryFn: () => getAll(),
     retry: false,
   });
 
