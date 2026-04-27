@@ -1,18 +1,31 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, MessageSquare, PenSquare, Send, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  Check,
+  MessageSquare,
+  Pencil,
+  PenSquare,
+  Send,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listUserProfiles, type UserProfileRow } from "../../api/apiUserProfiles";
 import { useUser } from "../../features/authentication/useUser";
 import { HeaderIconTooltip } from "../ui/HeaderIconTooltip";
 import {
   useCreateDmThreadAndSendMutation,
+  useCreateGroupThreadAndSendMutation,
+  useDeleteDmMessageMutation,
   useDmMessagesList,
   useDmMessagesSubscription,
   useDmThreadsWithProfiles,
   useDmUnreadCount,
   useMarkDmReadMutation,
+  useSendBroadcastMutation,
   useSendDmMessageMutation,
+  useUpdateDmMessageMutation,
   type DmMessageRow,
   type DmThreadWithMeta,
 } from "../../features/messaging/useDirectMessages";
@@ -39,11 +52,9 @@ type Props = {
   onClose: () => void;
 };
 
-function labelForUser(p: UserProfileRow | null, fallback: string) {
-  if (p == null) return fallback;
-  const n = p.full_name?.trim();
-  if (n) return n;
-  return p.email?.trim() || fallback;
+function toggleInList(ids: string[], id: string): string[] {
+  if (ids.includes(id)) return ids.filter((x) => x !== id);
+  return [...ids, id];
 }
 
 export function DirectMessagesPanel({ open, onClose }: Props) {
@@ -54,8 +65,13 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<DmMessageRow | null>(null);
   const [body, setBody] = useState("");
-  const [composeToId, setComposeToId] = useState<string>("");
   const [composeUserFilter, setComposeUserFilter] = useState("");
+  /** اختيار مُتعدّد للمستقبلين (بدون «للجميع») */
+  const [composeSelectedIds, setComposeSelectedIds] = useState<string[]>([]);
+  const [sendToAll, setSendToAll] = useState(false);
+  const [groupTitle, setGroupTitle] = useState("");
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
 
   const { data: threads = [], isLoading: loadingThreads, isError: errThreads } =
     useDmThreadsWithProfiles(me, { enabled: open });
@@ -74,9 +90,23 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
     useSendDmMessageMutation(me);
   const {
     mutate: createAndSend,
-    isPending: createPending,
-    error: createError,
+    isPending: create1Pending,
+    error: create1Error,
   } = useCreateDmThreadAndSendMutation(me);
+  const {
+    mutate: createGroupAndSend,
+    isPending: createGroupPending,
+    error: createGroupError,
+  } = useCreateGroupThreadAndSendMutation(me);
+  const {
+    mutate: sendBroadcast,
+    isPending: broadcastPending,
+    error: broadcastError,
+  } = useSendBroadcastMutation(me);
+  const { mutate: updateMessage, isPending: updateMsgPending } =
+    useUpdateDmMessageMutation(me);
+  const { mutate: deleteMessage, isPending: deleteMsgPending } =
+    useDeleteDmMessageMutation(me);
 
   useDmMessagesSubscription(me, open);
   const qc = useQueryClient();
@@ -98,6 +128,11 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
       setActiveThreadId(null);
       setReplyTo(null);
       setBody("");
+      setComposeSelectedIds([]);
+      setSendToAll(false);
+      setGroupTitle("");
+      setEditingMessageId(null);
+      setEditDraft("");
     }
   }, [open]);
 
@@ -110,12 +145,28 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
     if (view === "thread" && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [view, messages.length]);
+  }, [view, messages.length, editingMessageId]);
 
   const canSend = body.trim().length > 0;
-  const busy = sendPending || createPending;
-  const sendErr = ((sendError ?? createError) as { message?: string } | null)
+  const busy =
+    sendPending ||
+    create1Pending ||
+    createGroupPending ||
+    broadcastPending ||
+    updateMsgPending ||
+    deleteMsgPending;
+  const createErr = ((create1Error ?? createGroupError) as { message?: string } | null)
     ?.message;
+  const sendErr =
+    ((sendError ?? broadcastError ?? createErr) as { message?: string } | null)
+      ?.message;
+
+  const composeReady =
+    view !== "compose" || sendToAll || composeSelectedIds.length > 0;
+  const singleRecipient =
+    !sendToAll && composeSelectedIds.length === 1
+      ? composeSelectedIds[0]!
+    : null;
 
   const composeCandidates = useMemo(() => {
     if (!me) return [] as UserProfileRow[];
@@ -131,6 +182,19 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
       .slice(0, 200);
   }, [allUsers, me, composeUserFilter]);
 
+  const onToggleSendToAll = (v: boolean) => {
+    setSendToAll(v);
+    if (v) {
+      setComposeSelectedIds([]);
+      setGroupTitle("");
+    }
+  };
+
+  const onToggleUser = (userId: string) => {
+    if (sendToAll) return;
+    setComposeSelectedIds((ids) => toggleInList(ids, userId));
+  };
+
   const openThread = (t: DmThreadWithMeta) => {
     setActiveThreadId(t.thread.id);
     setView("thread");
@@ -139,18 +203,64 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
 
   const onSubmitSend = () => {
     if (!canSend || !me) return;
-    if (view === "compose" && !composeToId.trim()) return;
     const t = body.trim();
-    if (view === "compose" && composeToId) {
-      createAndSend(
-        { otherUserId: composeToId, body: t },
+    if (view === "compose") {
+      if (sendToAll) {
+        sendBroadcast(
+          { body: t },
+          {
+            onSuccess: (msg) => {
+              setBody("");
+              onToggleSendToAll(false);
+              setView("thread");
+              setActiveThreadId(msg.thread_id);
+              setReplyTo(null);
+              toast.success("أُرسلت الرسالة للجميع");
+            },
+            onError: (e) => {
+              toast.error(
+                e instanceof Error ? e.message : "تعذر إرسال الرسالة",
+              );
+            },
+          },
+        );
+        return;
+      }
+      if (composeSelectedIds.length === 0) return;
+      if (singleRecipient) {
+        createAndSend(
+          { otherUserId: singleRecipient, body: t },
+          {
+            onSuccess: (d) => {
+              setBody("");
+              setView("thread");
+              setActiveThreadId(d.threadId);
+              setComposeSelectedIds([]);
+              toast.success("تم إرسال الرسالة");
+            },
+            onError: (e) => {
+              toast.error(
+                e instanceof Error ? e.message : "تعذر إرسال الرسالة",
+              );
+            },
+          },
+        );
+        return;
+      }
+      createGroupAndSend(
+        {
+          memberUserIds: composeSelectedIds,
+          body: t,
+          title: groupTitle.trim() ? groupTitle.trim() : null,
+        },
         {
           onSuccess: (d) => {
             setBody("");
             setView("thread");
             setActiveThreadId(d.threadId);
-            setComposeToId("");
-            toast.success("تم إرسال الرسالة");
+            setComposeSelectedIds([]);
+            setGroupTitle("");
+            toast.success("أُرسلت إلى المجموعة");
           },
           onError: (e) => {
             toast.error(
@@ -162,6 +272,10 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
       return;
     }
     if (view === "thread" && activeThreadId) {
+      if (replyTo?.deleted_at) {
+        toast.error("لا يمكن الرد على رسالة محذوفة");
+        return;
+      }
       send(
         {
           threadId: activeThreadId,
@@ -185,6 +299,64 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
     }
   };
 
+  const onStartEdit = useCallback((m: DmMessageRow) => {
+    if (m.deleted_at) return;
+    setEditingMessageId(m.id);
+    setEditDraft(m.body);
+  }, []);
+
+  const onSaveEdit = useCallback(() => {
+    if (!editingMessageId || !activeThreadId || !me) return;
+    const d = editDraft.trim();
+    if (!d) {
+      toast.error("نصّ الرسالة لا يكون فارغاً");
+      return;
+    }
+    updateMessage(
+      { messageId: editingMessageId, body: d, threadId: activeThreadId },
+      {
+        onSuccess: () => {
+          setEditingMessageId(null);
+          setEditDraft("");
+          toast.success("عُدّلت الرسالة");
+        },
+        onError: (e) => {
+          toast.error(
+            e instanceof Error ? e.message : "تعذر تعديل الرسالة",
+          );
+        },
+      },
+    );
+  }, [editingMessageId, activeThreadId, me, editDraft, updateMessage]);
+
+  const onCancelEdit = useCallback(() => {
+    setEditingMessageId(null);
+    setEditDraft("");
+  }, []);
+
+  const onDeleteOwn = useCallback(
+    (m: DmMessageRow) => {
+      if (m.deleted_at || !activeThreadId) return;
+      if (!window.confirm("حذف هذه الرسالة؟")) return;
+      deleteMessage(
+        { messageId: m.id, threadId: activeThreadId },
+        {
+          onSuccess: () => {
+            if (replyTo?.id === m.id) setReplyTo(null);
+            if (editingMessageId === m.id) onCancelEdit();
+            toast.success("حُذفت الرسالة");
+          },
+          onError: (e) => {
+            toast.error(
+              e instanceof Error ? e.message : "تعذر حذف الرسالة",
+            );
+          },
+        },
+      );
+    },
+    [activeThreadId, replyTo, editingMessageId, deleteMessage, onCancelEdit],
+  );
+
   if (!open) return null;
 
   return (
@@ -207,15 +379,13 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
                 setView("list");
                 setActiveThreadId(null);
                 setReplyTo(null);
+                setEditingMessageId(null);
               }}
             >
               <ArrowLeft className="size-4 shrink-0" strokeWidth={2} />
               <span className="min-w-0 truncate">
                 {activeThreadMeta
-                  ? labelForUser(
-                      activeThreadMeta.other,
-                      "مستخدم"
-                    )
+                  ? activeThreadMeta.displayName
                   : "…"}
               </span>
             </button>
@@ -226,7 +396,9 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-800"
               onClick={() => {
                 setView("list");
-                setComposeToId("");
+                setComposeSelectedIds([]);
+                setSendToAll(false);
+                setGroupTitle("");
                 setBody("");
               }}
             >
@@ -243,7 +415,9 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
               title="رسالة جديدة"
               onClick={() => {
                 setView("compose");
-                setComposeToId("");
+                setComposeSelectedIds([]);
+                setSendToAll(false);
+                setGroupTitle("");
                 setBody("");
                 setReplyTo(null);
                 setActiveThreadId(null);
@@ -280,7 +454,8 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
                 className="text-sm font-medium text-emerald-700 hover:underline"
                 onClick={() => {
                   setView("compose");
-                  setComposeToId("");
+                  setComposeSelectedIds([]);
+                  setSendToAll(false);
                   setBody("");
                 }}
               >
@@ -300,10 +475,7 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
                     onClick={() => void openThread(t)}
                   >
                     <span className="text-sm font-semibold text-slate-900">
-                      {labelForUser(
-                        t.other,
-                        t.thread.participant_low,
-                      )}
+                      {t.displayName}
                       {t.isUnread && (
                         <span className="ms-1 inline-block size-2 rounded-full bg-emerald-500" />
                       )}
@@ -340,6 +512,7 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
             ) : (
               messages.map((m) => {
                 const mine = m.sender_id === me;
+                const isDeleted = Boolean(m.deleted_at);
                 return (
                   <div
                     key={m.id}
@@ -353,19 +526,79 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
                           : "bg-gradient-to-l from-emerald-600 to-teal-600 text-white shadow-sm",
                       )}
                     >
-                      {m.reply_to_id && (
+                      {m.reply_to_id && !isDeleted && (
                         <p className="mb-0.5 border-b border-white/20 pb-0.5 text-[0.6rem] opacity-90">
                           (رد)
                         </p>
                       )}
-                      <button
-                        type="button"
-                        className="w-full break-words text-inherit"
-                        onClick={() => (mine ? null : setReplyTo(m))}
-                        title={mine ? "" : "رد على هذه"}
-                      >
-                        {m.body}
-                      </button>
+                      {isDeleted ? (
+                        <p className="text-xs italic text-slate-500">
+                          حُذفت هذه الرسالة
+                        </p>
+                      ) : editingMessageId === m.id && mine ? (
+                        <div className="space-y-1">
+                          <textarea
+                            rows={3}
+                            className="w-full resize-y rounded border border-slate-200 bg-white px-2 py-1 text-slate-800"
+                            value={editDraft}
+                            onChange={(e) => setEditDraft(e.target.value)}
+                          />
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              className="rounded p-1 text-slate-500 hover:bg-slate-200"
+                              onClick={onCancelEdit}
+                              aria-label="إلغاء"
+                            >
+                              <X className="size-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              className="inline-flex items-center gap-0.5 rounded bg-emerald-600 px-2 py-0.5 text-xs text-white hover:bg-emerald-700"
+                              onClick={onSaveEdit}
+                              disabled={updateMsgPending}
+                            >
+                              <Check className="size-3.5" />
+                              حفظ
+                            </button>
+                          </div>
+                        </div>
+                      ) : mine ? (
+                        <p className="w-full break-words">{m.body}</p>
+                      ) : (
+                        <button
+                          type="button"
+                          className="w-full break-words text-inherit"
+                          onClick={() => setReplyTo(m)}
+                          title="رد على هذه"
+                        >
+                          {m.body}
+                        </button>
+                      )}
+                      {mine && !isDeleted && editingMessageId !== m.id ? (
+                        <div className="mt-0.5 flex items-center justify-end gap-0.5">
+                          <HeaderIconTooltip label="تعديل">
+                            <button
+                              type="button"
+                              className="inline-flex size-6 items-center justify-center rounded text-slate-500 hover:bg-slate-200 hover:text-slate-800"
+                              onClick={() => onStartEdit(m)}
+                              aria-label="تعديل"
+                            >
+                              <Pencil className="size-3" strokeWidth={1.75} />
+                            </button>
+                          </HeaderIconTooltip>
+                          <HeaderIconTooltip label="حذف">
+                            <button
+                              type="button"
+                              className="inline-flex size-6 items-center justify-center rounded text-slate-500 hover:bg-red-50 hover:text-red-800"
+                              onClick={() => onDeleteOwn(m)}
+                              aria-label="حذف"
+                            >
+                              <Trash2 className="size-3" strokeWidth={1.75} />
+                            </button>
+                          </HeaderIconTooltip>
+                        </div>
+                      ) : null}
                       <p
                         className={cx(
                           "mt-0.5 text-[0.6rem] opacity-80",
@@ -373,6 +606,9 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
                         )}
                       >
                         {formatMsgTime(m.created_at)}
+                        {m.edited_at && !isDeleted && (
+                          <span className="ms-1">(عُدِّلت)</span>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -380,7 +616,7 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
               })
             )}
           </div>
-          {replyTo && me && (
+          {replyTo && me && !replyTo.deleted_at && (
             <div className="mx-1 mb-0.5 flex items-center justify-between gap-1 rounded-lg bg-emerald-50/80 px-2 py-1 text-xs text-slate-700">
               <span className="min-w-0 truncate" title={replyTo.body}>
                 «{replyTo.body}»
@@ -400,48 +636,88 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
 
       {view === "compose" && (
         <div className="shrink-0 space-y-2 border-b border-slate-100 px-2 py-2">
-          <p className="px-0.5 text-xs font-medium text-slate-600">إلى</p>
-          <input
-            type="search"
-            className="w-full rounded-lg border border-slate-200 bg-slate-50/80 px-2 py-1.5 text-sm"
-            placeholder="ابحث بالاسم أو البريد"
-            value={composeUserFilter}
-            onChange={(e) => setComposeUserFilter(e.target.value)}
-          />
-          {loadingUsers ? (
-            <p className="text-center text-xs text-slate-500">…</p>
-          ) : (
-            <div className="max-h-32 overflow-y-auto rounded-lg border border-slate-100">
-              {composeCandidates.length === 0 ? (
-                <p className="p-2 text-center text-xs text-slate-500">لا نتائج</p>
+          <p className="px-0.5 text-xs font-medium text-slate-600">المستقبل</p>
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/60 px-2 py-1.5 text-sm">
+            <input
+              type="checkbox"
+              className="size-4 rounded border-slate-300"
+              checked={sendToAll}
+              onChange={(e) => onToggleSendToAll(e.target.checked)}
+            />
+            <span className="font-medium text-slate-800">إرسال للجميع</span>
+          </label>
+          {!sendToAll && (
+            <>
+              <input
+                type="search"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50/80 px-2 py-1.5 text-sm"
+                placeholder="ابحث بالاسم أو البريد"
+                value={composeUserFilter}
+                onChange={(e) => setComposeUserFilter(e.target.value)}
+                disabled={sendToAll}
+              />
+              {composeSelectedIds.length > 1 ? (
+                <div>
+                  <p className="mb-0.5 px-0.5 text-[0.7rem] text-slate-500">اسم المجموعة (اختياري)</p>
+                  <input
+                    type="text"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm"
+                    placeholder="مثال: فريق المشروع"
+                    value={groupTitle}
+                    onChange={(e) => setGroupTitle(e.target.value)}
+                  />
+                </div>
+              ) : null}
+              {loadingUsers ? (
+                <p className="text-center text-xs text-slate-500">…</p>
               ) : (
-                <ul>
-                  {composeCandidates.map((u) => (
-                    <li key={u.id}>
-                      <button
-                        type="button"
-                        className={cx(
-                          "w-full border-b border-slate-100 px-2 py-1.5 text-end last:border-0",
-                          u.id === composeToId
-                            ? "bg-emerald-100/50 text-emerald-900"
-                            : "hover:bg-slate-50",
-                        )}
-                        onClick={() => setComposeToId(u.id)}
-                      >
-                        <span className="text-sm font-medium text-slate-800">
-                          {formatOptionalText(u.full_name) || u.email}
-                        </span>
-                        {u.email ? (
-                          <span className="ms-1 block text-[0.7rem] text-slate-500">
-                            {u.email}
-                          </span>
-                        ) : null}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                <div className="max-h-32 overflow-y-auto rounded-lg border border-slate-100">
+                  {composeCandidates.length === 0 ? (
+                    <p className="p-2 text-center text-xs text-slate-500">لا نتائج</p>
+                  ) : (
+                    <ul>
+                      {composeCandidates.map((u) => {
+                        const sel = composeSelectedIds.includes(u.id);
+                        return (
+                          <li key={u.id}>
+                            <button
+                              type="button"
+                              className={cx(
+                                "flex w-full items-center gap-2 border-b border-slate-100 px-2 py-1.5 text-end last:border-0",
+                                sel
+                                  ? "bg-emerald-100/50 text-emerald-900"
+                                  : "hover:bg-slate-50",
+                              )}
+                              onClick={() => onToggleUser(u.id)}
+                            >
+                              <span
+                                className={cx(
+                                  "ms-auto inline-flex size-4 shrink-0 items-center justify-center rounded border",
+                                  sel
+                                    ? "border-emerald-600 bg-emerald-600"
+                                    : "border-slate-300",
+                                )}
+                                aria-hidden
+                              />
+                              <span className="min-w-0 flex-1 text-start">
+                                <span className="text-sm font-medium text-slate-800">
+                                  {formatOptionalText(u.full_name) || u.email}
+                                </span>
+                                {u.email ? (
+                                  <span className="ms-1 block text-[0.7rem] text-slate-500">
+                                    {u.email}
+                                  </span>
+                                ) : null}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
               )}
-            </div>
+            </>
           )}
         </div>
       )}
@@ -456,7 +732,11 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
               rows={2}
               className="min-w-0 flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50/80 px-2 py-1.5 text-sm"
               placeholder={
-                view === "compose" ? "نصّ الرسالة (بعد اختيار المستقبل)…" : "اكتب…"
+                view === "compose"
+                  ? sendToAll
+                    ? "نصّ الرسالة (يصل لجميع المستخدمين)…"
+                    : "نصّ الرسالة (اختر «للجميع» أو مستقبلًا واحدًا أو أكثر)…"
+                  : "اكتب…"
               }
               value={body}
               onChange={(e) => setBody(e.target.value)}
@@ -465,7 +745,7 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
                   e.preventDefault();
                   if (
                     !busy &&
-                    (view === "thread" ? activeThreadId : !!composeToId)
+                    (view === "thread" ? activeThreadId : composeReady)
                   ) {
                     onSubmitSend();
                   }
@@ -478,7 +758,7 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
               disabled={
                 !canSend ||
                 busy ||
-                (view === "compose" && !composeToId) ||
+                (view === "compose" && !composeReady) ||
                 (view === "thread" && !activeThreadId)
               }
               onClick={onSubmitSend}

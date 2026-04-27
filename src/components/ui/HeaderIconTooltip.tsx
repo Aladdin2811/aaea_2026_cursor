@@ -11,8 +11,8 @@ type Props = {
 };
 
 /**
- * تلميح بسيط لأيقونات AppHeader — أسفل الأيقونة.
- * `aria-hidden` — يبقى aria-label على الزر.
+ * تلميح بسيط يظهر أسفل العنصر (رأس التطبيق، أزرار جدول…).
+ * محتوى التلميح `aria-hidden` — يُفضّل `aria-label` على الزر أو الرابط.
  */
 export function HeaderIconTooltip({
   label,
@@ -36,15 +36,15 @@ export function HeaderIconTooltip({
         aria-hidden
         className={cx(
           "pointer-events-none absolute left-1/2 top-full z-[60] mt-1.5 w-max max-w-[11.5rem] -translate-x-1/2 select-none",
-          "rounded-md border border-slate-600/60 bg-slate-800 px-2.5 py-1.5 text-center shadow-sm",
-          "text-xs text-slate-100",
+          "rounded-md bg-green-100 shadow-sm shadow-green-200/30 px-2.5 py-1.5 text-center",
+          "text-xs text-slate-800",
           "opacity-0 transition-opacity duration-150",
           "group-hover/tooltip:opacity-100 group-focus-within/tooltip:opacity-100",
         )}
       >
         <p className="font-medium leading-snug">{label}</p>
         {sublabel ? (
-          <p className="mt-0.5 text-[0.7rem] font-normal leading-tight text-slate-300">
+          <p className="mt-0.5 text-[0.7rem] font-normal leading-tight text-slate-600">
             {sublabel}
           </p>
         ) : null}
