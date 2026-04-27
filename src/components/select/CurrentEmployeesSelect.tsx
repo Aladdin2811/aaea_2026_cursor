@@ -1,4 +1,4 @@
-import { useId, useMemo } from "react";
+import { useEffect, useId, useMemo } from "react";
 import Select, {
   type GroupBase,
   type SingleValue,
@@ -14,30 +14,39 @@ function sortKeyNullableId(v: number | null): number {
   return v;
 }
 
-function compareHiringDate(a: string | null, b: string | null): number {
-  const aEmpty = a == null || a === "";
-  const bEmpty = b == null || b === "";
-  if (aEmpty && bEmpty) return 0;
-  if (aEmpty) return 1;
-  if (bEmpty) return -1;
-  return a.localeCompare(b);
-}
+type ActiveEmployeesFilterOptions = {
+  /**
+   * إن وُجد `true`: الشرط الوحيد `social_security_subscribe === true` (بدون اشتراط `status`).
+   * الترتيب موحّد مع الوضع الافتراضي: الدرجة → الفئة → معرّف الموظف.
+   */
+  requireSocialSecuritySubscribe?: boolean;
+};
 
-/** موظفون بحالة فعّالة (`status === true`) — مرتبون كما في جداول شؤون الموظفين. */
-function toSortedActiveEmployees(
+/**
+ * تصفية وترتيب موظفين للاختيار.
+ * الترتيب دائمًا: الدرجة (`job_grade_id`) → الفئة (`job_category_id`) → معرّف الموظف (`id`).
+ * - الافتراض: `status === true` فقط.
+ * - مع `requireSocialSecuritySubscribe`: `social_security_subscribe === true` فقط.
+ */
+function toSortedEmployeesForSelect(
   rows: AllEmployeesWithRelations[],
+  options?: ActiveEmployeesFilterOptions,
 ): AllEmployeesWithRelations[] {
-  const filtered = rows.filter((r) => r.status === true);
+  const onlySs = options?.requireSocialSecuritySubscribe === true;
+  const filtered = rows.filter((r) => {
+    if (onlySs) {
+      return r.social_security_subscribe === true;
+    }
+    return r.status === true;
+  });
   return [...filtered].sort((a, b) => {
+    const g =
+      sortKeyNullableId(a.job_grade_id) - sortKeyNullableId(b.job_grade_id);
+    if (g !== 0) return g;
     const c =
       sortKeyNullableId(a.job_category_id) -
       sortKeyNullableId(b.job_category_id);
     if (c !== 0) return c;
-    const g =
-      sortKeyNullableId(a.job_grade_id) - sortKeyNullableId(b.job_grade_id);
-    if (g !== 0) return g;
-    const h = compareHiringDate(a.hiring_date, b.hiring_date);
-    if (h !== 0) return h;
     return a.id - b.id;
   });
 }
@@ -133,10 +142,16 @@ export type CurrentEmployeesSelectProps = {
   placeholder?: string;
   "aria-label"?: string;
   labelPosition?: CurrentEmployeesSelectLabelPosition;
+  /**
+   * عند `true`: قائمة من `social_security_subscribe === true` فقط (أي `status`).
+   * عند `false` (الافتراضي): موظفون `status === true` فقط.
+   * الترتيب في الحالتين: الدرجة → الفئة → معرّف الموظف (`id`).
+   */
+  requireSocialSecuritySubscribe?: boolean;
 };
 
 /**
- * اختيار من جميع الموظفين ذوي الحالة المفعّلة (`status === true`) — التسمية: الاسم فقط.
+ * اختيار موظف من القائمة الكاملة — التسمية: الاسم فقط.
  */
 export default function CurrentEmployeesSelect({
   value,
@@ -146,14 +161,27 @@ export default function CurrentEmployeesSelect({
   placeholder = "اختر الموظف",
   "aria-label": ariaLabel = "الموظف",
   labelPosition = "inline",
+  requireSocialSecuritySubscribe = false,
 }: CurrentEmployeesSelectProps) {
   const reactSelectId = useId();
   const { isLoading, data, isError, error } = useFetchAllEmployees();
 
   const options = useMemo(
-    () => toOptions(toSortedActiveEmployees(data ?? [])),
-    [data],
+    () =>
+      toOptions(
+        toSortedEmployeesForSelect(data ?? [], {
+          requireSocialSecuritySubscribe,
+        }),
+      ),
+    [data, requireSocialSecuritySubscribe],
   );
+
+  useEffect(() => {
+    if (value == null) return;
+    if (!options.some((o) => o.value === value)) {
+      onChange(null);
+    }
+  }, [value, options, onChange]);
 
   const selected = useMemo(
     () => options.find((o) => o.value === value) ?? null,
@@ -231,7 +259,9 @@ export default function CurrentEmployeesSelect({
       ) : null}
       {!isLoading && !isError && options.length === 0 ? (
         <p className={`text-sm text-slate-600 ${fullWidthRowClass}`.trim()}>
-          لا يوجد موظفون بحالة فعّالة للاختيار.
+          {requireSocialSecuritySubscribe
+            ? "لا يوجد موظفون مشتركون في الضمان الاجتماعي للاختيار."
+            : "لا يوجد موظفون بحالة فعّالة للاختيار."}
         </p>
       ) : null}
     </div>

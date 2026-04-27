@@ -30,6 +30,12 @@ export type AllEmployeesSocialSituationEmbed = {
   social_situation_name: string | null;
 };
 
+/** `social_security_situation_id` → `social_security_situations` (ضمان اجتماعي، وليس `social_situation_id`) */
+export type AllEmployeesSocialSecuritySituationEmbed = {
+  id: number;
+  social_security_situation_name: string | null;
+};
+
 export type AllEmployeesGenderEmbed = {
   id: number;
   gender_name: string | null;
@@ -98,6 +104,11 @@ export type AllEmployeesWithRelations = AllEmployeesRow & {
     | AllEmployeesSocialSituationEmbed
     | AllEmployeesSocialSituationEmbed[]
     | null;
+  /** `social_security_situation_id` → جدول أوضاع الضمان الاجتماعي */
+  social_security_situations:
+    | AllEmployeesSocialSecuritySituationEmbed
+    | AllEmployeesSocialSecuritySituationEmbed[]
+    | null;
   gender: AllEmployeesGenderEmbed | AllEmployeesGenderEmbed[] | null;
   nature_of_work:
     | AllEmployeesNatureOfWorkEmbed
@@ -153,6 +164,7 @@ const selectAllEmployeesEmbed = `
   job_grade ( id, job_grade_name ),
   job_title ( id, job_title_name ),
   social_situations ( id, social_situation_name ),
+  social_security_situations ( id, social_security_situation_name ),
   gender ( id, gender_name ),
   nature_of_work ( id, nature_of_work_name ),
   expatriate ( id, expatriate_name )

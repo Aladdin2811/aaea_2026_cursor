@@ -38,6 +38,7 @@ import VacationTypePage from "../pages/vacations/VacationTypePage.tsx";
 import VacationsBalancesPage from "../pages/vacations/VacationsBalancesPage.tsx";
 import VacationsPage from "../pages/vacations/VacationsPage.tsx";
 import EmployeesBanksPage from "../pages/employees/EmployeesBanksPage.tsx";
+import SocialSecurityExpensesPage from "../pages/socialSecurity/SocialSecurityExpensesPage.tsx";
 
 const ph = (title: string, description: string) => (
   <PlaceholderPage title={title} description={description} />
@@ -259,7 +260,7 @@ export const router = createBrowserRouter([
 
       {
         path: "social_security/social_security_expenses",
-        element: ph("مصروفات التعويض الصحي", "------"),
+        element: <SocialSecurityExpensesPage />,
       },
       {
         path: "social_security/social_security_expenses_statement",
