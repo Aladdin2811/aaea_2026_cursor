@@ -39,6 +39,17 @@ import VacationsBalancesPage from "../pages/vacations/VacationsBalancesPage.tsx"
 import VacationsPage from "../pages/vacations/VacationsPage.tsx";
 import EmployeesBanksPage from "../pages/employees/EmployeesBanksPage.tsx";
 import SocialSecurityExpensesPage from "../pages/socialSecurity/SocialSecurityExpensesPage.tsx";
+import SocialSecurityBandPage from "../pages/socialSecurity/SocialSecurityBandPage.tsx";
+import SocialSecurityBandLimitPage from "../pages/socialSecurity/SocialSecurityBandLimitPage.tsx";
+import SocialSecurityPercentagePage from "../pages/socialSecurity/SocialSecurityPercentagePage.tsx";
+import SocialSecuritySituationsPage from "../pages/socialSecurity/SocialSecuritySituationsPage.tsx";
+import SocialSecurityCurrencyPage from "../pages/socialSecurity/SocialSecurityCurrencyPage.tsx";
+import SocialSecurityCurrencyRatePage from "../pages/socialSecurity/SocialSecurityCurrencyRatePage.tsx";
+import SocialSecurityBandPercentagePage from "../pages/socialSecurity/SocialSecurityBandPercentagePage.tsx";
+import SocialSecurityContractorsRepaymentPage from "../pages/socialSecurity/SocialSecurityContractorsRepaymentPage.tsx";
+import SocialSecurityContributionPage from "../pages/socialSecurity/SocialSecurityContributionPage.tsx";
+import SocialSecurityExpensesStatementPage from "../pages/socialSecurity/SocialSecurityExpensesStatementPage.tsx";
+import SocialSecurityCategoryPage from "../pages/socialSecurity/SocialSecurityCategoryPage.tsx";
 
 const ph = (title: string, description: string) => (
   <PlaceholderPage title={title} description={description} />
@@ -264,47 +275,47 @@ export const router = createBrowserRouter([
       },
       {
         path: "social_security/social_security_expenses_statement",
-        element: ph("كشف مصروفات التعويض الصحي", "------"),
+        element: <SocialSecurityExpensesStatementPage />,
       },
       {
         path: "social_security/social_security_contribution",
-        element: ph("نسب المساهمة", "------"),
+        element: <SocialSecurityContributionPage />,
       },
       {
         path: "social_security/social_security_class_category",
-        element: ph("تصنيف وفئات المستفيدين بالضمان", "------"),
+        element: <SocialSecurityCategoryPage />,
       },
       {
         path: "social_security/social_security_band",
-        element: ph("بنود الضمان", "------"),
+        element: <SocialSecurityBandPage />,
       },
       {
         path: "social_security/social_security_percentage",
-        element: ph("نسب تعويض الضمان", "------"),
+        element: <SocialSecurityPercentagePage />,
       },
       {
         path: "social_security/social_security_band_percentage",
-        element: ph("نسب تعويض بنود الضمان", "------"),
+        element: <SocialSecurityBandPercentagePage />,
       },
       {
         path: "social_security/social_security_band_limit",
-        element: ph("أسقف التعويض لبنود الضمان", "------"),
+        element: <SocialSecurityBandLimitPage />,
       },
       {
         path: "social_security/social_security_contractors_repayment",
-        element: ph("نسب تعويض المتعاقدين بالضمان", "------"),
+        element: <SocialSecurityContractorsRepaymentPage />,
       },
       {
         path: "social_security/social_security_situations",
-        element: ph("الحالات الإجتماعية للضمان", "------"),
+        element: <SocialSecuritySituationsPage />,
       },
       {
         path: "social_security/social_security_currency",
-        element: ph("العملات المتعامل بها", "------"),
+        element: <SocialSecurityCurrencyPage />,
       },
       {
         path: "social_security/social_security_currency_rate",
-        element: ph("سعر الصرف للضمان", "------"),
+        element: <SocialSecurityCurrencyRatePage />,
       },
 
       //==========================================================================

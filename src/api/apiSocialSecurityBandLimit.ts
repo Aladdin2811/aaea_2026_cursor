@@ -30,6 +30,7 @@ export type SocialSecurityBandLimitRow = {
   social_security_situation_id: number | null;
   social_security_notes: string | null;
   social_security_classification_id: number | null;
+  social_security_band_percentage: number | null;
 };
 
 export type SocialSecurityBandLimitWithRelations = SocialSecurityBandLimitRow & {
@@ -84,6 +85,7 @@ const selectSocialSecurityBandLimitEmbed = `
   social_security_situation_id,
   social_security_notes,
   social_security_classification_id,
+  social_security_band_percentage,
   social_security_band ( id, social_security_band_name ),
   social_security_category ( id, social_security_category_name ),
   social_security_currency ( id, social_security_currency_name ),
