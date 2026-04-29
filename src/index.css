@@ -1,13 +1,30 @@
-@import 'tailwindcss';
-@import 'sonner/dist/styles.css';
+@import "tailwindcss";
+@import "sonner/dist/styles.css";
+
+@font-face {
+  font-family: "ArabicTransparent";
+  src: local("Arabic Transparent"), local("ArabicTransparent");
+  font-display: swap;
+}
+
+:root {
+  /* نقطة التحكم الموحدة لحجم الخط على مستوى المشروع */
+  --app-font-size-base: 18px;
+  /* نقطة التحكم بخط القائمة الجانبية */
+  --sidebar-group-label-size: 16px;
+  --sidebar-child-label-size: 16px;
+  /* حجم قاعدة التقرير (مرتبط بـ rem حتى يتأثر بالمقياس العام) */
+  --report-font-size: 0.8125rem;
+}
 
 @theme {
-  --font-sans: 'Cairo', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Cairo", ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
   html {
     font-family: var(--font-sans);
+    font-size: var(--app-font-size-base);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     @apply h-dvh overflow-hidden;
@@ -19,5 +36,33 @@
 
   #root {
     @apply h-full min-h-0 overflow-hidden;
+  }
+}
+
+.report-font {
+  font-family: "ArabicTransparent", Tahoma, Arial, sans-serif;
+}
+
+.report-base {
+  font-size: var(--report-font-size);
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .report-a4 {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    margin: 0 auto !important;
   }
 }

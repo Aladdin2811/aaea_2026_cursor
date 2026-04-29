@@ -6,7 +6,6 @@ import {
   DataTable,
   type DataTableColumn,
 } from "../../components/ui/data-table";
-import { HeaderIconTooltip } from "../../components/ui/HeaderIconTooltip";
 import { formatOptionalText, stringValue } from "../../lib/displayValue";
 import { CertifiedProgramFormDialog } from "./CertifiedProgramFormDialog";
 import {
@@ -159,43 +158,39 @@ export default function CertifiedProgramsTable({
         thClassName: "!whitespace-normal text-center",
         cell: (row) => (
           <div className="flex items-center justify-center gap-1">
-            <HeaderIconTooltip label="تعديل">
-              <button
-                type="button"
-                className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/60 hover:text-emerald-800 disabled:opacity-50"
-                aria-label="تعديل"
-                disabled={isDeleting || isSubmitting}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditing(row);
-                  setDialogMode("edit");
-                  setDialogOpen(true);
-                }}
-              >
-                <Pencil className="size-4" strokeWidth={1.75} />
-              </button>
-            </HeaderIconTooltip>
-            <HeaderIconTooltip label="حذف">
-              <button
-                type="button"
-                className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50/60 hover:text-red-800 disabled:opacity-50"
-                aria-label="حذف"
-                disabled={isDeleting || isSubmitting}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (
-                    !window.confirm(
-                      `تأكيد حذف النشاط المعتمد «${row.program_name ?? `#${row.id}`}»؟`,
-                    )
-                  ) {
-                    return;
-                  }
-                  deleteCertifiedProgram(row.id);
-                }}
-              >
-                <Trash2 className="size-4" strokeWidth={1.75} />
-              </button>
-            </HeaderIconTooltip>
+            <button
+              type="button"
+              className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/60 hover:text-emerald-800 disabled:opacity-50"
+              aria-label="تعديل"
+              disabled={isDeleting || isSubmitting}
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditing(row);
+                setDialogMode("edit");
+                setDialogOpen(true);
+              }}
+            >
+              <Pencil className="size-4" strokeWidth={1.75} />
+            </button>
+            <button
+              type="button"
+              className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50/60 hover:text-red-800 disabled:opacity-50"
+              aria-label="حذف"
+              disabled={isDeleting || isSubmitting}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (
+                  !window.confirm(
+                    `تأكيد حذف النشاط المعتمد «${row.program_name ?? `#${row.id}`}»؟`,
+                  )
+                ) {
+                  return;
+                }
+                deleteCertifiedProgram(row.id);
+              }}
+            >
+              <Trash2 className="size-4" strokeWidth={1.75} />
+            </button>
           </div>
         ),
         getSortValue: () => 0,

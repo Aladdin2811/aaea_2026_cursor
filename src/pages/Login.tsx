@@ -17,7 +17,7 @@ export default function Login() {
   if (isLoading) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-slate-50">
-        <p className="text-sm text-slate-600">جاري التحقق من الجلسة…</p>
+        <p className="text-sm text-slate-600">جاري التحقق من االصلاحيات…</p>
       </main>
     );
   }
@@ -31,7 +31,9 @@ export default function Login() {
         alt=""
         className="h-[15rem] w-auto max-w-full object-contain"
       />
-      <h1 className="text-lg font-semibold text-slate-800">تسجيل بيانات المستخدم</h1>
+      <h1 className="text-lg font-semibold text-slate-800">
+        تسجيل بيانات المستخدم
+      </h1>
       <div className="w-full max-w-md">
         <LoginForm />
       </div>

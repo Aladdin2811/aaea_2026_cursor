@@ -9,7 +9,6 @@ import {
 } from "../../features/notifications/useInAppNotifications";
 import { getHrefForInAppNotification } from "../../lib/notificationNavigation";
 import { cx } from "../../lib/cx";
-import { HeaderIconTooltip } from "../ui/HeaderIconTooltip";
 
 function formatNotifTime(iso: string): string {
   try {
@@ -55,28 +54,26 @@ export function InAppNotificationBell() {
 
   return (
     <div className="relative" ref={ref} dir="rtl">
-      <HeaderIconTooltip label="التنبيهات" sublabel="اعتمادات بانتظارك">
-        <button
-          type="button"
-          className={cx(
-            "relative inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:bg-white hover:text-emerald-700 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/35 active:scale-[0.97]",
-            open && "bg-white text-emerald-700 shadow-sm",
-          )}
-          aria-label="تنبيهات الاعتماد"
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <Bell className="size-[1.15rem]" strokeWidth={1.75} />
-          {unread > 0 ? (
-            <span
-              className="absolute end-1 top-1 min-w-4 rounded-full bg-red-500 px-0.5 text-center text-[0.6rem] font-bold leading-4 text-white ring-2 ring-white"
-              aria-label={`${unread} غير مقروء`}
-            >
-              {unread > 9 ? "9+" : unread}
-            </span>
-          ) : null}
-        </button>
-      </HeaderIconTooltip>
+      <button
+        type="button"
+        className={cx(
+          "relative inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:bg-white hover:text-emerald-700 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/35 active:scale-[0.97]",
+          open && "bg-white text-emerald-700 shadow-sm",
+        )}
+        aria-label="تنبيهات الاعتماد"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <Bell className="size-[1.15rem]" strokeWidth={1.75} />
+        {unread > 0 ? (
+          <span
+            className="absolute end-1 top-1 min-w-4 rounded-full bg-red-500 px-0.5 text-center text-[0.6rem] font-bold leading-4 text-white ring-2 ring-white"
+            aria-label={`${unread} غير مقروء`}
+          >
+            {unread > 9 ? "9+" : unread}
+          </span>
+        ) : null}
+      </button>
 
       {open ? (
         <div

@@ -13,7 +13,6 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listUserProfiles, type UserProfileRow } from "../../api/apiUserProfiles";
 import { useUser } from "../../features/authentication/useUser";
-import { HeaderIconTooltip } from "../ui/HeaderIconTooltip";
 import {
   useCreateDmThreadAndSendMutation,
   useCreateGroupThreadAndSendMutation,
@@ -577,26 +576,22 @@ export function DirectMessagesPanel({ open, onClose }: Props) {
                       )}
                       {mine && !isDeleted && editingMessageId !== m.id ? (
                         <div className="mt-0.5 flex items-center justify-end gap-0.5">
-                          <HeaderIconTooltip label="تعديل">
-                            <button
-                              type="button"
-                              className="inline-flex size-6 items-center justify-center rounded text-slate-500 hover:bg-slate-200 hover:text-slate-800"
-                              onClick={() => onStartEdit(m)}
-                              aria-label="تعديل"
-                            >
-                              <Pencil className="size-3" strokeWidth={1.75} />
-                            </button>
-                          </HeaderIconTooltip>
-                          <HeaderIconTooltip label="حذف">
-                            <button
-                              type="button"
-                              className="inline-flex size-6 items-center justify-center rounded text-slate-500 hover:bg-red-50 hover:text-red-800"
-                              onClick={() => onDeleteOwn(m)}
-                              aria-label="حذف"
-                            >
-                              <Trash2 className="size-3" strokeWidth={1.75} />
-                            </button>
-                          </HeaderIconTooltip>
+                          <button
+                            type="button"
+                            className="inline-flex size-6 items-center justify-center rounded text-slate-500 hover:bg-slate-200 hover:text-slate-800"
+                            onClick={() => onStartEdit(m)}
+                            aria-label="تعديل"
+                          >
+                            <Pencil className="size-3" strokeWidth={1.75} />
+                          </button>
+                          <button
+                            type="button"
+                            className="inline-flex size-6 items-center justify-center rounded text-slate-500 hover:bg-red-50 hover:text-red-800"
+                            onClick={() => onDeleteOwn(m)}
+                            aria-label="حذف"
+                          >
+                            <Trash2 className="size-3" strokeWidth={1.75} />
+                          </button>
                         </div>
                       ) : null}
                       <p
@@ -797,28 +792,26 @@ export function DirectMessagesInHeader() {
 
   return (
     <div className="relative" ref={ref} dir="rtl">
-      <HeaderIconTooltip label="الرسائل" sublabel="إرسال ورد مع المستخدمين">
-        <button
-          type="button"
-          className={cx(
-            "relative inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:bg-white hover:text-emerald-700 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/35 active:scale-[0.97]",
-            open && "bg-white text-emerald-700 shadow-sm",
-          )}
-          aria-label="الرسائل"
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <MessageSquare className="size-[1.15rem]" strokeWidth={1.75} />
-          {unread > 0 ? (
-            <span
-              className="absolute end-0.5 top-0.5 min-w-4 rounded-full bg-red-500 px-0.5 text-center text-[0.6rem] font-bold leading-4 text-white ring-2 ring-white"
-              aria-label={`${unread} غير مقروء`}
-            >
-              {unread > 9 ? "9+" : unread}
-            </span>
-          ) : null}
-        </button>
-      </HeaderIconTooltip>
+      <button
+        type="button"
+        className={cx(
+          "relative inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:bg-white hover:text-emerald-700 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/35 active:scale-[0.97]",
+          open && "bg-white text-emerald-700 shadow-sm",
+        )}
+        aria-label="الرسائل"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <MessageSquare className="size-[1.15rem]" strokeWidth={1.75} />
+        {unread > 0 ? (
+          <span
+            className="absolute end-0.5 top-0.5 min-w-4 rounded-full bg-red-500 px-0.5 text-center text-[0.6rem] font-bold leading-4 text-white ring-2 ring-white"
+            aria-label={`${unread} غير مقروء`}
+          >
+            {unread > 9 ? "9+" : unread}
+          </span>
+        ) : null}
+      </button>
       <DirectMessagesPanel
         open={open}
         onClose={() => setOpen(false)}

@@ -14,14 +14,14 @@ function relationItem<T>(value: T | T[] | null | undefined): T | null {
   return value ?? null;
 }
 
-function amountDecimalPlacesByCurrencyName(
-  currencyName: string | null | undefined,
-): number {
-  const normalized = (currencyName ?? "").trim();
-  if (normalized.includes("دينار")) return 3;
-  if (normalized.includes("جنيه")) return 2;
-  return 2;
-}
+// function amountDecimalPlacesByCurrencyName(
+//   currencyName: string | null | undefined,
+// ): number {
+//   const normalized = (currencyName ?? "").trim();
+//   if (normalized.includes("دينار")) return 3;
+//   if (normalized.includes("جنيه")) return 2;
+//   return 2;
+// }
 
 function parseNumericValue(
   value: string | number | null | undefined,
@@ -75,7 +75,8 @@ function exportBandLimitToExcelCsv(
 
   const lines = rows.map((row) => {
     const classification = relationItem(row.social_security_classification);
-    const classificationName = classification?.social_security_classification_name;
+    const classificationName =
+      classification?.social_security_classification_name;
     const classificationLabel =
       classificationName != null && classificationName.trim() !== ""
         ? classificationName
@@ -98,12 +99,16 @@ function exportBandLimitToExcelCsv(
           });
 
     return [
-      textOrDash(relationItem(row.social_security_band)?.social_security_band_name),
       textOrDash(
-        relationItem(row.social_security_category)?.social_security_category_name,
+        relationItem(row.social_security_band)?.social_security_band_name,
       ),
       textOrDash(
-        relationItem(row.social_security_situations)?.social_security_situation_name,
+        relationItem(row.social_security_category)
+          ?.social_security_category_name,
+      ),
+      textOrDash(
+        relationItem(row.social_security_situations)
+          ?.social_security_situation_name,
       ),
       classificationLabel,
       percent,
@@ -146,7 +151,8 @@ function printBandLimitTable(
   const rowsHtml = rows
     .map((row, idx) => {
       const classification = relationItem(row.social_security_classification);
-      const classificationName = classification?.social_security_classification_name;
+      const classificationName =
+        classification?.social_security_classification_name;
       const classificationLabel =
         classificationName != null && classificationName.trim() !== ""
           ? classificationName
@@ -167,12 +173,16 @@ function printBandLimitTable(
             });
       const cells = [
         String(idx + 1),
-        textOrDash(relationItem(row.social_security_band)?.social_security_band_name),
         textOrDash(
-          relationItem(row.social_security_category)?.social_security_category_name,
+          relationItem(row.social_security_band)?.social_security_band_name,
         ),
         textOrDash(
-          relationItem(row.social_security_situations)?.social_security_situation_name,
+          relationItem(row.social_security_category)
+            ?.social_security_category_name,
+        ),
+        textOrDash(
+          relationItem(row.social_security_situations)
+            ?.social_security_situation_name,
         ),
         classificationLabel,
         percent,
@@ -184,7 +194,9 @@ function printBandLimitTable(
     .join("");
 
   popup.document.open();
-  popup.document.write(`<!doctype html><html dir="rtl"><head><meta charset="utf-8"/><title>طباعة أسقف بنود الضمان الاجتماعي</title><style>body{font-family:Tahoma,Arial,sans-serif;padding:16px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:6px 8px;text-align:center}th{background:#f1f5f9}caption{font-weight:700;margin-bottom:8px}</style></head><body><table><caption>جدول أسقف بنود الضمان الاجتماعي</caption><thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`);
+  popup.document.write(
+    `<!doctype html><html dir="rtl"><head><meta charset="utf-8"/><title>طباعة أسقف بنود الضمان الاجتماعي</title><style>body{font-family:Tahoma,Arial,sans-serif;padding:16px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:6px 8px;text-align:center}th{background:#f1f5f9}caption{font-weight:700;margin-bottom:8px}</style></head><body><table><caption>جدول أسقف بنود الضمان الاجتماعي</caption><thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`,
+  );
   popup.document.close();
   popup.onload = () => {
     popup.focus();

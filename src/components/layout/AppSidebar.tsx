@@ -10,11 +10,7 @@ type Props = {
   desktopVisible?: boolean;
 };
 
-export function AppSidebar({
-  open,
-  onClose,
-  desktopVisible = true,
-}: Props) {
+export function AppSidebar({ open, onClose, desktopVisible = true }: Props) {
   const location = useLocation();
   const baseId = useId();
   const [openGroupId, setOpenGroupId] = useState<string | null>(() => {
@@ -90,102 +86,102 @@ export function AppSidebar({
             className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overflow-x-hidden overscroll-y-contain p-2"
             aria-label="القائمة الرئيسية"
           >
-          {navGroups.map((group) => {
-            const Icon = group.icon;
-            const expanded = openGroupId === group.id;
-            const groupActive = groupHasActiveChild(location.pathname, group);
-            const panelId = `${baseId}-${group.id}-panel`;
+            {navGroups.map((group) => {
+              const Icon = group.icon;
+              const expanded = openGroupId === group.id;
+              const groupActive = groupHasActiveChild(location.pathname, group);
+              const panelId = `${baseId}-${group.id}-panel`;
 
-            return (
-              <div
-                key={group.id}
-                className="min-h-0 rounded-xl border border-slate-100/90 bg-slate-50/40 shadow-sm shadow-slate-100/80"
-              >
-                <button
-                  type="button"
-                  id={`${baseId}-${group.id}-btn`}
-                  aria-expanded={expanded}
-                  aria-controls={panelId}
-                  onClick={() => toggleGroup(group.id)}
-                  className={[
-                    "flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-start transition-colors",
-                    groupActive
-                      ? "bg-gradient-to-l from-emerald-50/95 to-white text-emerald-900 ring-1 ring-emerald-100/90"
-                      : "bg-white text-slate-800 hover:bg-slate-50/90",
-                  ].join(" ")}
+              return (
+                <div
+                  key={group.id}
+                  className="min-h-0 rounded-xl border border-slate-100/90 bg-slate-50/40 shadow-sm shadow-slate-100/80"
                 >
-                  <span
+                  <button
+                    type="button"
+                    id={`${baseId}-${group.id}-btn`}
+                    aria-expanded={expanded}
+                    aria-controls={panelId}
+                    onClick={() => toggleGroup(group.id)}
                     className={[
-                      "flex size-8 shrink-0 items-center justify-center rounded-md",
+                      "flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-start transition-colors",
                       groupActive
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-slate-100 text-slate-600",
+                        ? "bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 text-white shadow-[0_1px_0_0_rgba(0,0,0,0.12)] shadow-emerald-900/20"
+                        : "bg-white text-slate-800 hover:bg-slate-50/90",
                     ].join(" ")}
                   >
-                    <Icon className="size-[1.15rem]" strokeWidth={2} />
-                  </span>
-                  <span className="min-w-0 flex-1 text-[13px] font-semibold leading-snug tracking-tight">
-                    {group.label}
-                  </span>
-                  <ChevronDown
-                    className={`size-4 shrink-0 text-slate-400 transition-transform duration-200 ${
-                      expanded ? "rotate-180" : ""
-                    }`}
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                </button>
+                    <span
+                      className={[
+                        "flex size-8 shrink-0 items-center justify-center rounded-md",
+                        groupActive
+                          ? "bg-white/15 text-white"
+                          : "bg-slate-100 text-slate-600",
+                      ].join(" ")}
+                    >
+                      <Icon className="size-[1.15rem]" strokeWidth={2} />
+                    </span>
+                    <span className="min-w-0 flex-1 text-[length:var(--sidebar-group-label-size)] font-semibold leading-snug tracking-tight">
+                      {group.label}
+                    </span>
+                    <ChevronDown
+                      className={`size-4 shrink-0 transition-transform duration-200 ${
+                        groupActive ? "text-white/90" : "text-slate-400"
+                      } ${expanded ? "rotate-180" : ""}`}
+                      strokeWidth={2}
+                      aria-hidden
+                    />
+                  </button>
 
-                <div
-                  id={panelId}
-                  role="region"
-                  aria-labelledby={`${baseId}-${group.id}-btn`}
-                  className={`grid min-h-0 transition-[grid-template-rows] duration-200 ease-out ${
-                    expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-                  }`}
-                >
-                  <div className="min-h-0 overflow-hidden">
-                    <ul className="space-y-0.5 border-t border-slate-100/90 bg-white/70 px-1.5 py-1.5">
-                      {group.children.map((child) => (
-                        <li key={`${group.id}-${child.to}`}>
-                          <NavLink
-                            to={child.to}
-                            end={child.end}
-                            onClick={onClose}
-                            className={({ isActive }) =>
-                              [
-                                "relative block rounded-md py-1.5 ps-5 pe-2 text-[12px] font-normal leading-snug transition-colors",
-                                "before:absolute before:inset-y-1.5 before:start-1.5 before:w-0.5 before:rounded-full before:bg-emerald-600 before:transition-opacity",
-                                isActive
-                                  ? "bg-emerald-50/90 text-emerald-900 before:opacity-100"
-                                  : "text-slate-600 before:opacity-0 hover:bg-slate-50 hover:text-slate-900",
-                              ].join(" ")
-                            }
-                          >
-                            {child.label}
-                          </NavLink>
-                        </li>
-                      ))}
-                    </ul>
+                  <div
+                    id={panelId}
+                    role="region"
+                    aria-labelledby={`${baseId}-${group.id}-btn`}
+                    className={`grid min-h-0 transition-[grid-template-rows] duration-200 ease-out ${
+                      expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                    }`}
+                  >
+                    <div className="min-h-0 overflow-hidden">
+                      <ul className="space-y-0.5 border-t border-slate-100/90 bg-white/70 px-1.5 py-1.5">
+                        {group.children.map((child) => (
+                          <li key={`${group.id}-${child.to}`}>
+                            <NavLink
+                              to={child.to}
+                              end={child.end}
+                              onClick={onClose}
+                              className={({ isActive }) =>
+                                [
+                                  "relative block rounded-md py-1.5 ps-5 pe-2 text-[length:var(--sidebar-child-label-size)] font-normal leading-snug transition-colors",
+                                  "before:absolute before:inset-y-1.5 before:start-1.5 before:w-0.5 before:rounded-full before:bg-emerald-600 before:transition-opacity",
+                                  isActive
+                                    ? "bg-teal-200/90 font-bold text-black before:opacity-100"
+                                    : "text-slate-600 before:opacity-0 hover:bg-slate-50 hover:text-slate-900",
+                                ].join(" ")
+                              }
+                            >
+                              {child.label}
+                            </NavLink>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
           </nav>
 
           <div className="border-t border-slate-100 p-3">
             <p className="flex min-w-0 items-center gap-1.5 truncate text-xs text-slate-500">
-            <span className="min-w-0 truncate whitespace-nowrap">
-              AAEA. All rights reserved. © {new Date().getFullYear()}
-            </span>
-            <img
-              src="/logo-AAEA.ico"
-              alt=""
-              width={20}
-              height={20}
-              className="size-5 shrink-0"
-            />
+              <span className="min-w-0 truncate whitespace-nowrap">
+                AAEA. All rights reserved. © {new Date().getFullYear()}
+              </span>
+              <img
+                src="/logo-AAEA.ico"
+                alt=""
+                width={20}
+                height={20}
+                className="size-5 shrink-0"
+              />
             </p>
           </div>
         </div>

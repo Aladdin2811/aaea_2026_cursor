@@ -243,17 +243,13 @@ export const navGroups: NavGroup[] = [
         to: "/social_security/social_security_band",
         label: "بنود الضمان",
       },
-      {
-        to: "/social_security/social_security_percentage",
-        label: "نسب تعويض الضمان",
-      },
-      {
-        to: "/social_security/social_security_band_percentage",
-        label: "نسب تعويض بنود الضمان",
-      },
+      // {
+      //   to: "/social_security/social_security_band_percentage",
+      //   label: "نسب تعويض بنود الضمان",
+      // },
       {
         to: "/social_security/social_security_band_limit",
-        label: "أسقف التعويض لبنود الضمان",
+        label: "نسب التعويض وأسقف بنود الضمان",
       },
       {
         to: "/social_security/social_security_contractors_repayment",
@@ -381,7 +377,7 @@ export const navGroups: NavGroup[] = [
     ],
   },
 
-   //==========================================================================
+  //==========================================================================
 
   {
     id: "documents_regulations",
@@ -393,7 +389,10 @@ export const navGroups: NavGroup[] = [
         label: "محاضر جلسات المجلس التنفيذي",
         end: true,
       },
-      { to: "/documents_regulations/general_conference", label: "محاضر جلسات المؤتمر العام" },
+      {
+        to: "/documents_regulations/general_conference",
+        label: "محاضر جلسات المؤتمر العام",
+      },
       { to: "/documents_regulations/regulations", label: "الأنظمة واللوائح" },
     ],
   },
@@ -423,6 +422,7 @@ export const navGroups: NavGroup[] = [
       { to: "/settings/social_situations", label: "الأوضاع الإجتماعية" },
       { to: "/settings/expatriate", label: "الإغتراب" },
       { to: "/settings/gender", label: "النوع" },
+      { to: "/settings/reports", label: "تصميم التقارير" },
     ],
   },
 ];

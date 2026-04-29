@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import { toast } from "sonner";
 
 type Props = {
   children: React.ReactNode;
@@ -8,6 +9,11 @@ type Props = {
 
 export function RequireAuth({ children }: Props) {
   const [state, setState] = useState<"loading" | "authed" | "anon">("loading");
+  const configuredMinutes = Number(import.meta.env.VITE_SESSION_TIMEOUT_MINUTES);
+  const sessionTimeoutMs =
+    Number.isFinite(configuredMinutes) && configuredMinutes > 0
+      ? configuredMinutes * 60 * 1000
+      : 60 * 60 * 1000;
 
   useEffect(() => {
     let cancelled = false;
@@ -29,6 +35,43 @@ export function RequireAuth({ children }: Props) {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (state !== "authed") return;
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const logoutForInactivity = () => {
+      void supabase.auth.signOut().finally(() => {
+        setState("anon");
+        toast.info("انتهت الجلسة بسبب عدم النشاط");
+      });
+    };
+
+    const resetTimer = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(logoutForInactivity, sessionTimeoutMs);
+    };
+
+    const events: Array<keyof WindowEventMap> = [
+      "click",
+      "keydown",
+      "mousemove",
+      "scroll",
+      "touchstart",
+    ];
+
+    events.forEach((eventName) =>
+      window.addEventListener(eventName, resetTimer, { passive: true }),
+    );
+    resetTimer();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      events.forEach((eventName) =>
+        window.removeEventListener(eventName, resetTimer),
+      );
+    };
+  }, [sessionTimeoutMs, state]);
 
   if (state === "loading") {
     return (

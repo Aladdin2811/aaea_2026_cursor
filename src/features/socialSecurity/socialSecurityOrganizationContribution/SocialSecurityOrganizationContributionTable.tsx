@@ -4,7 +4,7 @@ import {
   DataTable,
   type DataTableColumn,
 } from "../../../components/ui/data-table";
-import { formatOptionalText, stringValue } from "../../../lib/displayValue";
+import { stringValue } from "../../../lib/displayValue";
 import { useFetchSocialSecurityOrganizationContribution } from "./useSocialSecurityOrganizationContribution";
 
 function formatPercent(value: string | number | null | undefined): string {
@@ -38,7 +38,8 @@ function ToolbarCount({ n }: { n: number }): ReactNode {
 }
 
 export default function SocialSecurityOrganizationContributionTable() {
-  const { isLoading, data, error } = useFetchSocialSecurityOrganizationContribution();
+  const { isLoading, data, error } =
+    useFetchSocialSecurityOrganizationContribution();
   const rows = useMemo(() => data ?? [], [data]);
   const isError = error != null;
 
@@ -62,7 +63,9 @@ export default function SocialSecurityOrganizationContributionTable() {
         showIndex
         indexHeader="#"
         toolbar={
-          !isLoading && rows.length > 0 ? <ToolbarCount n={rows.length} /> : null
+          !isLoading && rows.length > 0 ? (
+            <ToolbarCount n={rows.length} />
+          ) : null
         }
         caption="جدول مساهمة الهيئة في الضمان الاجتماعي"
         density="comfortable"

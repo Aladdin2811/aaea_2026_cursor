@@ -3,7 +3,9 @@ import { cx } from "../../lib/cx";
 
 export type TableStatusTone = "active" | "inactive" | "neutral";
 
-type Parsed = { empty: true } | { empty: false; label: string; tone: TableStatusTone };
+type Parsed =
+  | { empty: true }
+  | { empty: false; label: string; tone: TableStatusTone };
 
 const POS = new Set([
   "true",
@@ -128,7 +130,10 @@ export function TableStatusBadge({
 
   return (
     <div
-      className={cx("inline-flex max-w-full min-w-0 items-center justify-center gap-2", className)}
+      className={cx(
+        "inline-flex max-w-full min-w-0 items-center justify-center gap-2",
+        className,
+      )}
       role="checkbox"
       aria-readonly="true"
       aria-checked={indeterminate ? "mixed" : checked}
@@ -143,11 +148,18 @@ export function TableStatusBadge({
           !checked &&
             !indeterminate &&
             "border-slate-300 bg-white shadow-sm shadow-slate-200/40",
-          indeterminate && "border-teal-400/80 bg-gradient-to-b from-teal-50/90 to-white",
+          indeterminate &&
+            "border-teal-400/80 bg-gradient-to-b from-teal-50/90 to-white",
         )}
         aria-hidden
       >
-        {checked && <Check className="size-3.5 stroke-[3] text-white" strokeLinecap="round" strokeLinejoin="round" />}
+        {checked && (
+          <Check
+            className="size-3.5 stroke-[3] text-white"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        )}
         {indeterminate && (
           <span className="block h-0.5 w-2.5 rounded-full bg-teal-500" />
         )}

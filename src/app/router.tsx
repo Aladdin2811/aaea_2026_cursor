@@ -41,15 +41,15 @@ import EmployeesBanksPage from "../pages/employees/EmployeesBanksPage.tsx";
 import SocialSecurityExpensesPage from "../pages/socialSecurity/SocialSecurityExpensesPage.tsx";
 import SocialSecurityBandPage from "../pages/socialSecurity/SocialSecurityBandPage.tsx";
 import SocialSecurityBandLimitPage from "../pages/socialSecurity/SocialSecurityBandLimitPage.tsx";
-import SocialSecurityPercentagePage from "../pages/socialSecurity/SocialSecurityPercentagePage.tsx";
 import SocialSecuritySituationsPage from "../pages/socialSecurity/SocialSecuritySituationsPage.tsx";
 import SocialSecurityCurrencyPage from "../pages/socialSecurity/SocialSecurityCurrencyPage.tsx";
 import SocialSecurityCurrencyRatePage from "../pages/socialSecurity/SocialSecurityCurrencyRatePage.tsx";
-import SocialSecurityBandPercentagePage from "../pages/socialSecurity/SocialSecurityBandPercentagePage.tsx";
+// import SocialSecurityBandPercentagePage from "../pages/socialSecurity/SocialSecurityBandPercentagePage.tsx";
 import SocialSecurityContractorsRepaymentPage from "../pages/socialSecurity/SocialSecurityContractorsRepaymentPage.tsx";
 import SocialSecurityContributionPage from "../pages/socialSecurity/SocialSecurityContributionPage.tsx";
 import SocialSecurityExpensesStatementPage from "../pages/socialSecurity/SocialSecurityExpensesStatementPage.tsx";
 import SocialSecurityCategoryPage from "../pages/socialSecurity/SocialSecurityCategoryPage.tsx";
+import ReportsStudioPage from "../pages/reports/ReportsStudioPage.tsx";
 
 const ph = (title: string, description: string) => (
   <PlaceholderPage title={title} description={description} />
@@ -289,14 +289,10 @@ export const router = createBrowserRouter([
         path: "social_security/social_security_band",
         element: <SocialSecurityBandPage />,
       },
-      {
-        path: "social_security/social_security_percentage",
-        element: <SocialSecurityPercentagePage />,
-      },
-      {
-        path: "social_security/social_security_band_percentage",
-        element: <SocialSecurityBandPercentagePage />,
-      },
+      // {
+      //   path: "social_security/social_security_band_percentage",
+      //   element: <SocialSecurityBandPercentagePage />,
+      // },
       {
         path: "social_security/social_security_band_limit",
         element: <SocialSecurityBandLimitPage />,
@@ -533,6 +529,10 @@ export const router = createBrowserRouter([
       {
         path: "settings/gender",
         element: <GenderPage />,
+      },
+      {
+        path: "settings/reports",
+        element: <ReportsStudioPage />,
       },
       {
         path: "*",
