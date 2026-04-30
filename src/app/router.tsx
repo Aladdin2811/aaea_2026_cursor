@@ -3,7 +3,7 @@ import ProtectedRoute from "./ProtectedRoute.tsx";
 import { AppLayout } from "../layouts/AppLayout";
 import { DashboardPage } from "../pages/DashboardPage";
 import Login from "../pages/Login.tsx";
-import { MembersPage } from "../pages/MembersPage";
+import { MembersPage } from "../pages/members/MembersPage.tsx";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
 import AccountTypePage from "../pages/accounts/AccountTypePage";
 import GeneralAccountPage from "../pages/accounts/GeneralAccountPage";
@@ -50,6 +50,12 @@ import SocialSecurityContributionPage from "../pages/socialSecurity/SocialSecuri
 import SocialSecurityExpensesStatementPage from "../pages/socialSecurity/SocialSecurityExpensesStatementPage.tsx";
 import SocialSecurityCategoryPage from "../pages/socialSecurity/SocialSecurityCategoryPage.tsx";
 import ReportsStudioPage from "../pages/reports/ReportsStudioPage.tsx";
+import MembersApprovedQuotasPage from "../pages/members/MembersApprovedQuotasPage.tsx";
+import MembersContributionsPage from "../pages/members/MembersContributionsPage.tsx";
+import MembersAdditionalBudgetPage from "../pages/members/MembersAdditionalBudgetPage.tsx";
+import MembersAdditionalBudgetPaymentPage from "../pages/members/MembersAdditionalBudgetPaymentPage.tsx";
+import ApprovedBudgetsPage from "../pages/financialManagement/ApprovedBudgetsPage.tsx";
+import BudgetsPage from "../pages/financialManagement/BudgetsPage.tsx";
 
 const ph = (title: string, description: string) => (
   <PlaceholderPage title={title} description={description} />
@@ -85,19 +91,19 @@ export const router = createBrowserRouter([
 
       {
         path: "members/contributions",
-        element: ph("المساهمات", "اشتراكات ومستحقات الدول الأعضاء."),
+        element: <MembersContributionsPage />,
       },
       {
         path: "members/approved_quotas",
-        element: ph("المساهمات", "اشتراكات ومستحقات الدول الأعضاء."),
+        element: <MembersApprovedQuotasPage />,
       },
       {
         path: "members/additional_budget",
-        element: ph("المساهمات", "اشتراكات ومستحقات الدول الأعضاء."),
+        element: <MembersAdditionalBudgetPage />,
       },
       {
         path: "members/additional_budget_payment",
-        element: ph("المساهمات", "اشتراكات ومستحقات الدول الأعضاء."),
+        element: <MembersAdditionalBudgetPaymentPage />,
       },
       {
         path: "members/reports",
@@ -166,11 +172,11 @@ export const router = createBrowserRouter([
 
       {
         path: "financial_management/approved_budgets",
-        element: ph("الموازنات المعتمدة", "------"),
+        element: <ApprovedBudgetsPage />,
       },
       {
         path: "financial_management/budgets",
-        element: ph("الإعتمادات المدرجة", "------"),
+        element: <BudgetsPage />,
       },
       {
         path: "financial_management/transfers",

@@ -1,10 +1,15 @@
 import {
   Banknote,
   Boxes,
+  FileSpreadsheet,
   Flag,
+  Home,
   Landmark,
   LayoutDashboard,
+  SearchX,
   Settings2,
+  TrendingUp,
+  UserPlus,
   Users,
   Wallet,
   type LucideIcon,
@@ -59,7 +64,7 @@ export const navGroups: NavGroup[] = [
   {
     id: "decisions",
     label: "القرارات",
-    icon: Wallet,
+    icon: FileSpreadsheet,
     children: [
       {
         to: "/decisions/decisions_travel",
@@ -78,7 +83,7 @@ export const navGroups: NavGroup[] = [
   {
     id: "programs",
     label: "الأنشطة والبرامج",
-    icon: Wallet,
+    icon: TrendingUp,
     children: [
       {
         to: "/programs/certified_programs",
@@ -152,7 +157,7 @@ export const navGroups: NavGroup[] = [
   {
     id: "administrative_management",
     label: "الشؤون الإدارية",
-    icon: Banknote,
+    icon: UserPlus,
     children: [
       { to: "/administrative_management/jobs", label: "الوظائف", end: true },
       {
@@ -220,7 +225,7 @@ export const navGroups: NavGroup[] = [
   {
     id: "social_security",
     label: "ص الضمان الإجتماعي",
-    icon: Banknote,
+    icon: Users,
     children: [
       {
         to: "/social_security/social_security_expenses",
@@ -275,7 +280,7 @@ export const navGroups: NavGroup[] = [
   {
     id: "audit",
     label: "الرقابة الداخلية",
-    icon: Users,
+    icon: SearchX,
     children: [
       {
         to: "/audit/audit_table_1",
@@ -342,7 +347,7 @@ export const navGroups: NavGroup[] = [
   {
     id: "warehouse",
     label: "المخزن",
-    icon: Users,
+    icon: Home,
     children: [
       {
         to: "/warehouse/warehouse_categories",
@@ -382,7 +387,7 @@ export const navGroups: NavGroup[] = [
   {
     id: "documents_regulations",
     label: "وثائق ولوائح",
-    icon: Boxes,
+    icon: FileSpreadsheet,
     children: [
       {
         to: "/documents_regulations/executive_council",

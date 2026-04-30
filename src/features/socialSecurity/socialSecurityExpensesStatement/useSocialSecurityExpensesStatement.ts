@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import supabase from "../../../services/supabase";
+import { supabase } from "../../../lib/supabase";
 
 export function useSocialSecurityExpensesStatement(
-  yearId,
-  monthId,
-  paymentMethod
+  yearId: number | string | null | undefined,
+  monthId: number | string | null | undefined,
+  paymentMethod: string | null | undefined,
 ) {
   const { data, error, isLoading } = useQuery({
     queryKey: [

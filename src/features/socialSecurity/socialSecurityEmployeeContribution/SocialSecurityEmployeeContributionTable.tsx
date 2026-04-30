@@ -4,7 +4,7 @@ import {
   DataTable,
   type DataTableColumn,
 } from "../../../components/ui/data-table";
-import { formatOptionalText, stringValue } from "../../../lib/displayValue";
+import { stringValue } from "../../../lib/displayValue";
 import { useFetchSocialSecurityEmployeeContribution } from "./useSocialSecurityEmployeeContribution";
 
 function formatPercent(value: string | number | null | undefined): string {

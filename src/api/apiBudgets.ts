@@ -78,6 +78,7 @@ export type UpdateBudgetsInput = Partial<Omit<BudgetsRow, "id">>;
 
 export type BudgetsListFilters = {
   year_id?: number | string;
+  bab_id?: number | string;
   detailed_id?: number | string;
   funding_type_id?: number | string;
   main_topic_id?: number | string;
@@ -141,11 +142,16 @@ export async function getAll(
   let query = supabase
     .from(tableName)
     .select(selectBudgetsEmbed)
-    .order("year_id", { ascending: false, nullsFirst: false })
-    .order("id", { ascending: false });
+    .order("band_id", { ascending: true, nullsFirst: false })
+    .order("no3_id", { ascending: true, nullsFirst: false })
+    .order("detailed_id", { ascending: true, nullsFirst: false })
+    .order("id", { ascending: true });
 
   if (filters?.year_id != null) {
     query = query.eq("year_id", parseNumericId(filters.year_id, "السنة"));
+  }
+  if (filters?.bab_id != null) {
+    query = query.eq("bab_id", parseNumericId(filters.bab_id, "الباب"));
   }
   if (filters?.detailed_id != null) {
     query = query.eq(

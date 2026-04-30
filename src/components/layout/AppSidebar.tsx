@@ -107,7 +107,7 @@ export function AppSidebar({ open, onClose, desktopVisible = true }: Props) {
                       "flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-start transition-colors",
                       groupActive
                         ? "bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 text-white shadow-[0_1px_0_0_rgba(0,0,0,0.12)] shadow-emerald-900/20"
-                        : "bg-white text-slate-800 hover:bg-slate-50/90",
+                        : "bg-olive-300/50 text-slate-800 hover:bg-slate-50/90",
                     ].join(" ")}
                   >
                     <span
@@ -153,7 +153,7 @@ export function AppSidebar({ open, onClose, desktopVisible = true }: Props) {
                                   "relative block rounded-md py-1.5 ps-5 pe-2 text-[length:var(--sidebar-child-label-size)] font-normal leading-snug transition-colors",
                                   "before:absolute before:inset-y-1.5 before:start-1.5 before:w-0.5 before:rounded-full before:bg-emerald-600 before:transition-opacity",
                                   isActive
-                                    ? "bg-teal-200/90 font-bold text-black before:opacity-100"
+                                    ? "bg-emerald-400/50 font-bold text-black before:opacity-100"
                                     : "text-slate-600 before:opacity-0 hover:bg-slate-50 hover:text-slate-900",
                                 ].join(" ")
                               }
