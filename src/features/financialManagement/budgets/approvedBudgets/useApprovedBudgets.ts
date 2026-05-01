@@ -16,6 +16,7 @@ export function useFetchApprovedBudgets(
     queryFn: () => getAll(filters),
     retry: false,
     enabled: options?.enabled ?? true,
+    staleTime: 0,
   });
 
   return { isLoading, data, error, isError };

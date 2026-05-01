@@ -15,6 +15,7 @@ export function useFetchMembersContributions(
     queryKey: ["members_contributions", filters ?? {}],
     queryFn: () => getAll(filters),
     enabled: options?.enabled ?? true,
+    staleTime: 0,
   });
 
   return { isLoading, data, error, isError };

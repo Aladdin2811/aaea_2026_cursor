@@ -4,102 +4,55 @@ import {
   DataTable,
   type DataTableColumn,
 } from "../../../components/ui/data-table";
+import { downloadUtf8Csv, printRtlTable } from "../../../lib/tableExport";
+import {
+  firstRelation,
+  formatNumeric,
+  textOrDash,
+  toNumberOrNull,
+} from "../../../lib/tableUtils";
 import { useFetchAdditionalBudgetPayment } from "./useAdditionalBudgetPayment";
 
-function firstRelation<T>(value: T | T[] | null): T | null {
-  if (value == null) return null;
-  return Array.isArray(value) ? (value[0] ?? null) : value;
-}
-
-function toNumberOrNull(
-  value: string | number | null | undefined,
-): number | null {
-  if (value == null || value === "") return null;
-  const n = typeof value === "string" ? Number.parseFloat(value) : value;
-  return Number.isFinite(n) ? n : null;
-}
-
-function formatNumeric(value: string | number | null | undefined): string {
-  const n = toNumberOrNull(value);
-  if (n == null || n === 0) return "—";
-  return n.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function textOrDash(value: string | null | undefined): string {
-  const v = (value ?? "").trim();
-  return v === "" ? "—" : v;
-}
+const ADDITIONAL_BUDGET_PAYMENT_EXPORT_HEADERS = [
+  "الدولة العضو",
+  "حساب المنظمة",
+  "الحساب الموحد",
+  "رقم المستند",
+  "تاريخ المستند",
+] as const;
 
 function exportAdditionalBudgetPaymentToExcelCsv(
   rows: AdditionalBudgetPaymentWithRelations[],
 ): void {
-  const headers = [
-    "الدولة العضو",
-    "حساب المنظمة",
-    "الحساب الموحد",
-    "رقم المستند",
-    "تاريخ المستند",
-  ];
-  const lines = rows.map((row) => [
-    textOrDash(firstRelation(row.members)?.member_name),
-    formatNumeric(row.organization_account),
-    formatNumeric(row.consolidated_account),
-    row.document_num == null ? "—" : String(row.document_num),
-    textOrDash(row.document_date),
-  ]);
-
-  const esc = (v: string) => `"${v.replaceAll('"', '""')}"`;
-  const csv = [headers, ...lines].map((r) => r.map(esc).join(",")).join("\r\n");
-  const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "additional_budget_payment.csv";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  downloadUtf8Csv(
+    "additional_budget_payment.csv",
+    [...ADDITIONAL_BUDGET_PAYMENT_EXPORT_HEADERS],
+    rows.map((row) => [
+      textOrDash(firstRelation(row.members)?.member_name),
+      formatNumeric(row.organization_account),
+      formatNumeric(row.consolidated_account),
+      row.document_num == null ? "—" : String(row.document_num),
+      textOrDash(row.document_date),
+    ]),
+  );
 }
 
 function printAdditionalBudgetPaymentTable(
   rows: AdditionalBudgetPaymentWithRelations[],
 ): void {
-  const popup = window.open("", "_blank");
-  if (popup == null) return;
-  const headers = [
-    "#",
-    "الدولة العضو",
-    "حساب المنظمة",
-    "الحساب الموحد",
-    "رقم المستند",
-    "تاريخ المستند",
-  ];
-  const rowsHtml = rows
-    .map((row, idx) => {
-      const cells = [
-        String(idx + 1),
-        textOrDash(firstRelation(row.members)?.member_name),
-        formatNumeric(row.organization_account),
-        formatNumeric(row.consolidated_account),
-        row.document_num == null ? "—" : String(row.document_num),
-        textOrDash(row.document_date),
-      ];
-      return `<tr>${cells.map((c) => `<td>${c}</td>`).join("")}</tr>`;
-    })
-    .join("");
-
-  popup.document.open();
-  popup.document.write(
-    `<!doctype html><html dir="rtl"><head><meta charset="utf-8"/><title>طباعة المسدد من الموازنة الإضافية</title><style>body{font-family:Tahoma,Arial,sans-serif;padding:16px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:6px 8px;text-align:center}th{background:#f1f5f9}caption{font-weight:700;margin-bottom:8px}</style></head><body><table><caption>جدول المسدد من الموازنة الإضافية</caption><thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`,
-  );
-  popup.document.close();
-  popup.onload = () => {
-    popup.focus();
-    popup.print();
-  };
+  printRtlTable({
+    documentTitle: "طباعة المسدد من الموازنة الإضافية",
+    caption: "جدول المسدد من الموازنة الإضافية",
+    headers: ["#", ...ADDITIONAL_BUDGET_PAYMENT_EXPORT_HEADERS],
+    rows: rows.map((row, idx) => [
+      String(idx + 1),
+      textOrDash(firstRelation(row.members)?.member_name),
+      formatNumeric(row.organization_account),
+      formatNumeric(row.consolidated_account),
+      row.document_num == null ? "—" : String(row.document_num),
+      textOrDash(row.document_date),
+    ]),
+  });
 }
 
 const columns: DataTableColumn<AdditionalBudgetPaymentWithRelations>[] = [

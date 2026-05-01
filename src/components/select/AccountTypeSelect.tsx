@@ -6,6 +6,7 @@ import Select, {
 } from "react-select";
 import type { AccountTypeRow } from "../../api/apiAccountType";
 import { useFetchAccountType } from "../../features/accounts/accountType/useAccountType";
+import { REACT_SELECT_MENU_Z_INDEX } from "./reactSelectMenuZIndex";
 
 type AccountTypeOption = { value: number; label: string };
 
@@ -70,11 +71,11 @@ const selectStyles: StylesConfig<
     overflow: "hidden",
     boxShadow:
       "0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08)",
-    zIndex: 50,
+    zIndex: REACT_SELECT_MENU_Z_INDEX,
   }),
   menuPortal: (base) => ({
     ...base,
-    zIndex: 50,
+    zIndex: REACT_SELECT_MENU_Z_INDEX,
   }),
   menuList: (base) => ({ ...base, padding: 4 }),
   option: (base, state) => ({
@@ -102,6 +103,7 @@ export type AccountTypeSelectLabelPosition = "above" | "inline" | "none";
 export type AccountTypeSelectProps = {
   value: number | null;
   onChange: (accountTypeId: number | null) => void;
+  onlyActive?: boolean;
   disabled?: boolean;
   className?: string;
   placeholder?: string;
@@ -120,6 +122,7 @@ export type AccountTypeSelectProps = {
 export default function AccountTypeSelect({
   value,
   onChange,
+  onlyActive = true,
   disabled = false,
   className = "",
   placeholder = "اختر نوع الحساب",
@@ -129,10 +132,10 @@ export default function AccountTypeSelect({
   const reactSelectId = useId();
   const { isLoading, data, isError, error } = useFetchAccountType();
 
-  const rowsForSelect = useMemo(
-    () => (data ?? []).filter((r) => r.status === true),
-    [data],
-  );
+  const rowsForSelect = useMemo(() => {
+    const rows = data ?? [];
+    return onlyActive ? rows.filter((r) => r.status === true) : rows;
+  }, [data, onlyActive]);
   const options = useMemo(() => toOptions(rowsForSelect), [rowsForSelect]);
   const selected = useMemo(
     () => options.find((o) => o.value === value) ?? null,

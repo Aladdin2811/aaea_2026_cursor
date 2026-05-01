@@ -6,6 +6,13 @@ import {
 } from "../../../components/ui/data-table";
 import { TableStatusBadge } from "../../../components/ui/TableStatusBadge";
 import { useFetchAllMembers } from "../members/useMembers";
+import { downloadUtf8Csv, printRtlTable } from "../../../lib/tableExport";
+import {
+  firstRelation,
+  formatNumeric,
+  textOrDash,
+  toNumberOrNull,
+} from "../../../lib/tableUtils";
 import { useFetchMembersContributions } from "./useMembersContributions";
 import Select, {
   type GroupBase,
@@ -13,115 +20,55 @@ import Select, {
   type StylesConfig,
 } from "react-select";
 
-function firstRelation<T>(value: T | T[] | null): T | null {
-  if (value == null) return null;
-  return Array.isArray(value) ? (value[0] ?? null) : value;
-}
-
-function toNumberOrNull(
-  value: string | number | null | undefined,
-): number | null {
-  if (value == null || value === "") return null;
-  const n = typeof value === "string" ? Number.parseFloat(value) : value;
-  return Number.isFinite(n) ? n : null;
-}
-
-function formatNumeric(value: string | number | null | undefined): string {
-  const n = toNumberOrNull(value);
-  if (n == null || n === 0) return "—";
-  return n.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-function textOrDash(value: string | null | undefined): string {
-  const v = (value ?? "").trim();
-  return v === "" ? "—" : v;
-}
+const MEMBERS_CONTRIBUTIONS_EXPORT_HEADERS = [
+  "الدولة العضو",
+  "سنة المساهمة",
+  "سنة السداد",
+  "مسدد بحساب المنظمة",
+  "مسدد بالحساب الموحد",
+  "رقم التسوية",
+  "تاريخ التسوية",
+  "مدفوع مقدمًا",
+] as const;
 
 function exportMembersContributionsToExcelCsv(
   rows: MembersContributionsWithRelations[],
 ): void {
-  const headers = [
-    "الدولة العضو",
-    "سنة المساهمة",
-    "سنة السداد",
-    "حساب المنظمة",
-    "الحساب الموحد",
-    "رقم المستند",
-    "تاريخ المستند",
-    "مدفوع مقدمًا",
-  ];
-
-  const lines = rows.map((row) => [
-    textOrDash(firstRelation(row.members)?.member_name),
-    textOrDash(firstRelation(row.contribution_year)?.year_num),
-    textOrDash(firstRelation(row.payed_year)?.year_num),
-    formatNumeric(row.organization_account),
-    formatNumeric(row.consolidated_account),
-    row.document_num == null ? "—" : String(row.document_num),
-    textOrDash(row.document_date),
-    row.prepaid ? "نعم" : "لا",
-  ]);
-
-  const esc = (v: string) => `"${v.replaceAll('"', '""')}"`;
-  const csv = [headers, ...lines].map((r) => r.map(esc).join(",")).join("\r\n");
-  const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "members_contributions.csv";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  downloadUtf8Csv(
+    "members_contributions.csv",
+    [...MEMBERS_CONTRIBUTIONS_EXPORT_HEADERS],
+    rows.map((row) => [
+      textOrDash(firstRelation(row.members)?.member_name),
+      textOrDash(firstRelation(row.contribution_year)?.year_num),
+      textOrDash(firstRelation(row.payed_year)?.year_num),
+      formatNumeric(row.organization_account),
+      formatNumeric(row.consolidated_account),
+      row.document_num == null ? "—" : String(row.document_num),
+      textOrDash(row.document_date),
+      row.prepaid ? "نعم" : "لا",
+    ]),
+  );
 }
 
 function printMembersContributionsTable(
   rows: MembersContributionsWithRelations[],
 ): void {
-  const popup = window.open("", "_blank");
-  if (popup == null) return;
-
-  const headers = [
-    "#",
-    "الدولة العضو",
-    "سنة المساهمة",
-    "سنة السداد",
-    "حساب المنظمة",
-    "الحساب الموحد",
-    "رقم المستند",
-    "تاريخ المستند",
-    "مدفوع مقدمًا",
-  ];
-
-  const rowsHtml = rows
-    .map((row, idx) => {
-      const cells = [
-        String(idx + 1),
-        textOrDash(firstRelation(row.members)?.member_name),
-        textOrDash(firstRelation(row.contribution_year)?.year_num),
-        textOrDash(firstRelation(row.payed_year)?.year_num),
-        formatNumeric(row.organization_account),
-        formatNumeric(row.consolidated_account),
-        row.document_num == null ? "—" : String(row.document_num),
-        textOrDash(row.document_date),
-        row.prepaid ? "نعم" : "لا",
-      ];
-      return `<tr>${cells.map((c) => `<td>${c}</td>`).join("")}</tr>`;
-    })
-    .join("");
-
-  popup.document.open();
-  popup.document.write(
-    `<!doctype html><html dir="rtl"><head><meta charset="utf-8"/><title>طباعة المساهمات المسددة</title><style>body{font-family:Tahoma,Arial,sans-serif;padding:16px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:6px 8px;text-align:center}th{background:#f1f5f9}caption{font-weight:700;margin-bottom:8px}</style></head><body><table><caption>جدول المساهمات المسددة</caption><thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`,
-  );
-  popup.document.close();
-  popup.onload = () => {
-    popup.focus();
-    popup.print();
-  };
+  printRtlTable({
+    documentTitle: "طباعة المساهمات المسددة",
+    caption: "جدول المساهمات المسددة",
+    headers: ["#", ...MEMBERS_CONTRIBUTIONS_EXPORT_HEADERS],
+    rows: rows.map((row, idx) => [
+      String(idx + 1),
+      textOrDash(firstRelation(row.members)?.member_name),
+      textOrDash(firstRelation(row.contribution_year)?.year_num),
+      textOrDash(firstRelation(row.payed_year)?.year_num),
+      formatNumeric(row.organization_account),
+      formatNumeric(row.consolidated_account),
+      row.document_num == null ? "—" : String(row.document_num),
+      textOrDash(row.document_date),
+      row.prepaid ? "نعم" : "لا",
+    ]),
+  });
 }
 
 const columns: DataTableColumn<MembersContributionsWithRelations>[] = [
@@ -159,7 +106,7 @@ const columns: DataTableColumn<MembersContributionsWithRelations>[] = [
   },
   {
     id: "organization_account",
-    header: "حساب المنظمة",
+    header: "مسدد بحساب المنظمة",
     cell: (row) => (
       <span
         className="block w-full text-right tabular-nums font-semibold text-slate-900"
@@ -174,7 +121,7 @@ const columns: DataTableColumn<MembersContributionsWithRelations>[] = [
   },
   {
     id: "consolidated_account",
-    header: "الحساب الموحد",
+    header: "مسدد بالحساب الموحد",
     cell: (row) => (
       <span
         className="block w-full text-right tabular-nums font-semibold text-slate-900"
@@ -189,7 +136,7 @@ const columns: DataTableColumn<MembersContributionsWithRelations>[] = [
   },
   {
     id: "document_num",
-    header: "رقم المستند",
+    header: "رقم التسوية",
     cell: (row) => (
       <span className="tabular-nums text-slate-800">
         {row.document_num ?? "—"}
@@ -200,7 +147,7 @@ const columns: DataTableColumn<MembersContributionsWithRelations>[] = [
   },
   {
     id: "document_date",
-    header: "تاريخ المستند",
+    header: "تاريخ التسوية",
     cell: (row) => (
       <span className="text-slate-700">{row.document_date ?? "—"}</span>
     ),
@@ -254,17 +201,16 @@ function Toolbar({
   rows: MembersContributionsWithRelations[];
 }): ReactNode {
   const { isLoading: membersLoading, data: membersData } = useFetchAllMembers();
-  const members = membersData ?? [];
   const options = useMemo<MemberOption[]>(
     () =>
-      members.map((m) => ({
+      (membersData ?? []).map((m) => ({
         value: m.id,
         label:
           m.member_name && m.member_name.trim() !== ""
             ? m.member_name
             : `دولة #${m.id}`,
       })),
-    [members],
+    [membersData],
   );
   const selected = useMemo(
     () => options.find((o) => o.value === memberId) ?? null,

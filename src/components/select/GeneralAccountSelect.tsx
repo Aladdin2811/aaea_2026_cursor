@@ -6,6 +6,7 @@ import Select, {
 } from "react-select";
 import type { GeneralAccountWithType } from "../../api/apiGeneralAccount";
 import { useGeneralAccountSelect } from "../../features/accounts/generalAccount/useGeneralAccount";
+import { REACT_SELECT_MENU_Z_INDEX } from "./reactSelectMenuZIndex";
 
 type GeneralAccountOption = { value: number; label: string };
 
@@ -72,11 +73,11 @@ const selectStyles: StylesConfig<
     overflow: "hidden",
     boxShadow:
       "0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08)",
-    zIndex: 50,
+    zIndex: REACT_SELECT_MENU_Z_INDEX,
   }),
   menuPortal: (base) => ({
     ...base,
-    zIndex: 50,
+    zIndex: REACT_SELECT_MENU_Z_INDEX,
   }),
   menuList: (base) => ({ ...base, padding: 4 }),
   option: (base, state) => ({
@@ -105,6 +106,7 @@ export type GeneralAccountSelectProps = {
   onChange: (generalAccountId: number | null) => void;
   /** يُحمَّل من `getAll(accountTypeId)` — عند `null` يبقى الحقل غير فعّال حتى يُحدَّد النوع */
   accountTypeId: number | null;
+  onlyActive?: boolean;
   disabled?: boolean;
   className?: string;
   placeholder?: string;
@@ -119,6 +121,7 @@ export default function GeneralAccountSelect({
   value,
   onChange,
   accountTypeId,
+  onlyActive = true,
   disabled = false,
   className = "",
   placeholder,
@@ -130,10 +133,10 @@ export default function GeneralAccountSelect({
     accountTypeId ?? undefined,
   );
 
-  const rowsForSelect = useMemo(
-    () => (data ?? []).filter((r) => r.status === true),
-    [data],
-  );
+  const rowsForSelect = useMemo(() => {
+    const rows = data ?? [];
+    return onlyActive ? rows.filter((r) => r.status === true) : rows;
+  }, [data, onlyActive]);
   const options = useMemo(() => toOptions(rowsForSelect), [rowsForSelect]);
   const selected = useMemo(
     () => options.find((o) => o.value === value) ?? null,

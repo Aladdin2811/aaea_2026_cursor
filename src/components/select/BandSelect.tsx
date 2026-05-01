@@ -6,6 +6,7 @@ import Select, {
 } from "react-select";
 import type { BandWithRelations } from "../../api/apiBand";
 import { useBandSelect } from "../../features/accounts/band/useBand";
+import { REACT_SELECT_MENU_Z_INDEX } from "./reactSelectMenuZIndex";
 
 type BandOption = { value: number; label: string };
 
@@ -36,9 +37,9 @@ const selectStyles: StylesConfig<
   control: (base, state) => ({
     ...base,
     minHeight: 40,
-    minWidth: "30rem",
+    minWidth: "18rem",
     width: "max-content",
-    maxWidth: "min(100%, 30rem)",
+    maxWidth: "min(100%, 20rem)",
     borderRadius: 8,
     borderColor: state.isFocused ? "#94a3b8" : "#e2e8f0",
     boxShadow: state.isFocused ? "0 0 0 1px #94a3b8" : "none",
@@ -72,11 +73,11 @@ const selectStyles: StylesConfig<
     overflow: "hidden",
     boxShadow:
       "0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08)",
-    zIndex: 50,
+    zIndex: REACT_SELECT_MENU_Z_INDEX,
   }),
   menuPortal: (base) => ({
     ...base,
-    zIndex: 50,
+    zIndex: REACT_SELECT_MENU_Z_INDEX,
   }),
   menuList: (base) => ({ ...base, padding: 4 }),
   option: (base, state) => ({

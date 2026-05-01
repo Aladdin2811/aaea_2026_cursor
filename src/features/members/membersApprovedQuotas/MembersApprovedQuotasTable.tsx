@@ -5,29 +5,12 @@ import {
   type DataTableColumn,
 } from "../../../components/ui/data-table";
 import { useFetchYears } from "../../years/year/useYears";
+import {
+  firstRelation,
+  formatNumeric,
+  toNumberOrNull,
+} from "../../../lib/tableUtils";
 import { useFetchMembersApprovedQuotas } from "./useMembersApprovedQuotas";
-
-function firstRelation<T>(value: T | T[] | null): T | null {
-  if (value == null) return null;
-  return Array.isArray(value) ? (value[0] ?? null) : value;
-}
-
-function toNumberOrNull(
-  value: string | number | null | undefined,
-): number | null {
-  if (value == null || value === "") return null;
-  const n = typeof value === "string" ? Number.parseFloat(value) : value;
-  return Number.isFinite(n) ? n : null;
-}
-
-function formatNumeric(value: string | number | null | undefined): string {
-  const n = toNumberOrNull(value);
-  if (n == null || n === 0) return "—";
-  return n.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
 
 const columns: DataTableColumn<MembersApprovedQuotasWithRelations>[] = [
   {

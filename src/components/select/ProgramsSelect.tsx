@@ -10,6 +10,7 @@ import {
   programsSelectScopeReady,
   useProgramsSelect,
 } from "../../features/programs/programs/usePrograms";
+import { REACT_SELECT_MENU_Z_INDEX } from "./reactSelectMenuZIndex";
 
 type ProgramOption = { value: number; label: string };
 
@@ -120,11 +121,11 @@ const selectStyles: StylesConfig<
     overflow: "hidden",
     boxShadow:
       "0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08)",
-    zIndex: 50,
+    zIndex: REACT_SELECT_MENU_Z_INDEX,
   }),
   menuPortal: (base) => ({
     ...base,
-    zIndex: 50,
+    zIndex: REACT_SELECT_MENU_Z_INDEX,
   }),
   menuList: (base) => ({ ...base, padding: 4 }),
   option: (base, state) => ({

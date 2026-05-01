@@ -6,6 +6,7 @@ import Select, {
 } from "react-select";
 import type { DetailedWithRelations } from "../../api/apiDetailed";
 import { useDetailedSelect } from "../../features/accounts/detailed/useDetailed";
+import { REACT_SELECT_MENU_Z_INDEX } from "./reactSelectMenuZIndex";
 
 type DetailedOption = { value: number; label: string };
 
@@ -22,23 +23,22 @@ function toOptions(rows: DetailedWithRelations[]): DetailedOption[] {
   }));
 }
 
-const selectStyles: StylesConfig<
-  DetailedOption,
-  false,
-  GroupBase<DetailedOption>
-> = {
-  container: (base) => ({
-    ...base,
-    display: "inline-block",
-    width: "auto",
-    maxWidth: "100%",
-  }),
+function createSelectStyles(
+  fullWidth: boolean,
+): StylesConfig<DetailedOption, false, GroupBase<DetailedOption>> {
+  return {
+    container: (base) => ({
+      ...base,
+      display: fullWidth ? "block" : "inline-block",
+      width: fullWidth ? "100%" : "auto",
+      maxWidth: "100%",
+    }),
   control: (base, state) => ({
     ...base,
     minHeight: 40,
-    minWidth: "30rem",
-    width: "max-content",
-    maxWidth: "min(100%, 30rem)",
+      minWidth: fullWidth ? "100%" : "18rem",
+      width: fullWidth ? "100%" : "max-content",
+      maxWidth: fullWidth ? "100%" : "min(100%, 20rem)",
     borderRadius: 8,
     borderColor: state.isFocused ? "#94a3b8" : "#e2e8f0",
     boxShadow: state.isFocused ? "0 0 0 1px #94a3b8" : "none",
@@ -72,11 +72,11 @@ const selectStyles: StylesConfig<
     overflow: "hidden",
     boxShadow:
       "0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08)",
-    zIndex: 50,
+    zIndex: REACT_SELECT_MENU_Z_INDEX,
   }),
   menuPortal: (base) => ({
     ...base,
-    zIndex: 50,
+    zIndex: REACT_SELECT_MENU_Z_INDEX,
   }),
   menuList: (base) => ({ ...base, padding: 4 }),
   option: (base, state) => ({
@@ -96,7 +96,8 @@ const selectStyles: StylesConfig<
     ...base,
     color: state.isFocused ? "#475569" : "#94a3b8",
   }),
-};
+  };
+}
 
 export type DetailedSelectLabelPosition = "above" | "inline" | "none";
 
@@ -105,6 +106,7 @@ export type DetailedSelectProps = {
   onChange: (detailedId: number | null) => void;
   /** يُحمَّل عبر `getForSelect(no3Id)` — عند `null` يبقى الحقل غير فعّال */
   no3Id: number | null;
+  fullWidth?: boolean;
   disabled?: boolean;
   className?: string;
   placeholder?: string;
@@ -119,6 +121,7 @@ export default function DetailedSelect({
   value,
   onChange,
   no3Id,
+  fullWidth = false,
   disabled = false,
   className = "",
   placeholder,
@@ -151,7 +154,7 @@ export default function DetailedSelect({
   const isInline = labelPosition === "inline";
   const showLabel = labelPosition !== "none";
   const rootClass = [
-    "w-fit max-w-full",
+    fullWidth ? "w-full max-w-full" : "w-fit max-w-full",
     isInline
       ? "inline-flex flex-row flex-wrap items-center gap-x-3 gap-y-1"
       : "flex flex-col gap-1",
@@ -196,7 +199,7 @@ export default function DetailedSelect({
         menuPortalTarget={
           typeof document !== "undefined" ? document.body : null
         }
-        styles={selectStyles}
+        styles={createSelectStyles(fullWidth)}
       />
       {isError ? (
         <p

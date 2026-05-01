@@ -7,6 +7,8 @@ import {
 import { formatOptionalText, stringValue } from "../../../lib/displayValue";
 import DecimalConverter from "../../../utils/DecimalConverter";
 import { useFetchSocialSecurityCurrencyRate } from "../socialSecurityCurrencyRate/useSocialSecurityCurrencyRate";
+import { downloadUtf8Csv, printRtlTable } from "../../../lib/tableExport";
+import { textOrDash } from "../../../lib/tableUtils";
 import { useFetchSocialSecurityBandLimit } from "./useSocialSecurityBandLimit";
 
 function relationItem<T>(value: T | T[] | null | undefined): T | null {
@@ -54,154 +56,87 @@ function tndLimitValue(
   return amount;
 }
 
-function textOrDash(value: string | null | undefined): string {
-  const v = (value ?? "").trim();
-  return v === "" ? "—" : v;
+const BAND_LIMIT_EXPORT_HEADERS = [
+  "البند",
+  "الفئة",
+  "الحالة الإجتماعية",
+  "التصنيف",
+  "نسبة التعويض",
+  "سقف التعويض (د.ت)",
+  "ملاحظات",
+] as const;
+
+function bandLimitRowCells(
+  row: SocialSecurityBandLimitWithRelations,
+  currencyRate: number | null,
+): string[] {
+  const classification = relationItem(row.social_security_classification);
+  const classificationName =
+    classification?.social_security_classification_name;
+  const classificationLabel =
+    classificationName != null && classificationName.trim() !== ""
+      ? classificationName
+      : row.social_security_classification_id != null
+        ? `تصنيف #${row.social_security_classification_id}`
+        : "—";
+
+  const percent =
+    row.social_security_band_percentage == null
+      ? "—"
+      : `${row.social_security_band_percentage}%`;
+
+  const tnd = tndLimitValue(row, currencyRate);
+  const tndLabel =
+    tnd == null
+      ? "—"
+      : tnd.toLocaleString("en-US", {
+          minimumFractionDigits: 3,
+          maximumFractionDigits: 3,
+        });
+
+  return [
+    textOrDash(
+      relationItem(row.social_security_band)?.social_security_band_name,
+    ),
+    textOrDash(
+      relationItem(row.social_security_category)
+        ?.social_security_category_name,
+    ),
+    textOrDash(
+      relationItem(row.social_security_situations)
+        ?.social_security_situation_name,
+    ),
+    classificationLabel,
+    percent,
+    tndLabel,
+    textOrDash(row.social_security_notes),
+  ];
 }
 
 function exportBandLimitToExcelCsv(
   rows: SocialSecurityBandLimitWithRelations[],
   currencyRate: number | null,
 ): void {
-  const headers = [
-    "البند",
-    "الفئة",
-    "الحالة الإجتماعية",
-    "التصنيف",
-    "نسبة التعويض",
-    "سقف التعويض (د.ت)",
-    "ملاحظات",
-  ];
-
-  const lines = rows.map((row) => {
-    const classification = relationItem(row.social_security_classification);
-    const classificationName =
-      classification?.social_security_classification_name;
-    const classificationLabel =
-      classificationName != null && classificationName.trim() !== ""
-        ? classificationName
-        : row.social_security_classification_id != null
-          ? `تصنيف #${row.social_security_classification_id}`
-          : "—";
-
-    const percent =
-      row.social_security_band_percentage == null
-        ? "—"
-        : `${row.social_security_band_percentage}%`;
-
-    const tnd = tndLimitValue(row, currencyRate);
-    const tndLabel =
-      tnd == null
-        ? "—"
-        : tnd.toLocaleString("en-US", {
-            minimumFractionDigits: 3,
-            maximumFractionDigits: 3,
-          });
-
-    return [
-      textOrDash(
-        relationItem(row.social_security_band)?.social_security_band_name,
-      ),
-      textOrDash(
-        relationItem(row.social_security_category)
-          ?.social_security_category_name,
-      ),
-      textOrDash(
-        relationItem(row.social_security_situations)
-          ?.social_security_situation_name,
-      ),
-      classificationLabel,
-      percent,
-      tndLabel,
-      textOrDash(row.social_security_notes),
-    ];
-  });
-
-  const esc = (v: string) => `"${v.replaceAll('"', '""')}"`;
-  const csv = [headers, ...lines].map((r) => r.map(esc).join(",")).join("\r\n");
-  const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "social_security_band_limit.csv";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  downloadUtf8Csv(
+    "social_security_band_limit.csv",
+    [...BAND_LIMIT_EXPORT_HEADERS],
+    rows.map((row) => bandLimitRowCells(row, currencyRate)),
+  );
 }
 
 function printBandLimitTable(
   rows: SocialSecurityBandLimitWithRelations[],
   currencyRate: number | null,
 ): void {
-  const popup = window.open("", "_blank");
-  if (popup == null) return;
-
-  const headers = [
-    "#",
-    "البند",
-    "الفئة",
-    "الحالة الإجتماعية",
-    "التصنيف",
-    "نسبة التعويض",
-    "سقف التعويض (د.ت)",
-    "ملاحظات",
-  ];
-
-  const rowsHtml = rows
-    .map((row, idx) => {
-      const classification = relationItem(row.social_security_classification);
-      const classificationName =
-        classification?.social_security_classification_name;
-      const classificationLabel =
-        classificationName != null && classificationName.trim() !== ""
-          ? classificationName
-          : row.social_security_classification_id != null
-            ? `تصنيف #${row.social_security_classification_id}`
-            : "—";
-      const percent =
-        row.social_security_band_percentage == null
-          ? "—"
-          : `${row.social_security_band_percentage}%`;
-      const tnd = tndLimitValue(row, currencyRate);
-      const tndLabel =
-        tnd == null
-          ? "—"
-          : tnd.toLocaleString("en-US", {
-              minimumFractionDigits: 3,
-              maximumFractionDigits: 3,
-            });
-      const cells = [
-        String(idx + 1),
-        textOrDash(
-          relationItem(row.social_security_band)?.social_security_band_name,
-        ),
-        textOrDash(
-          relationItem(row.social_security_category)
-            ?.social_security_category_name,
-        ),
-        textOrDash(
-          relationItem(row.social_security_situations)
-            ?.social_security_situation_name,
-        ),
-        classificationLabel,
-        percent,
-        tndLabel,
-        textOrDash(row.social_security_notes),
-      ];
-      return `<tr>${cells.map((c) => `<td>${c}</td>`).join("")}</tr>`;
-    })
-    .join("");
-
-  popup.document.open();
-  popup.document.write(
-    `<!doctype html><html dir="rtl"><head><meta charset="utf-8"/><title>طباعة أسقف بنود الضمان الاجتماعي</title><style>body{font-family:Tahoma,Arial,sans-serif;padding:16px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:6px 8px;text-align:center}th{background:#f1f5f9}caption{font-weight:700;margin-bottom:8px}</style></head><body><table><caption>جدول أسقف بنود الضمان الاجتماعي</caption><thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`,
-  );
-  popup.document.close();
-  popup.onload = () => {
-    popup.focus();
-    popup.print();
-  };
+  printRtlTable({
+    documentTitle: "طباعة أسقف بنود الضمان الاجتماعي",
+    caption: "جدول أسقف بنود الضمان الاجتماعي",
+    headers: ["#", ...BAND_LIMIT_EXPORT_HEADERS],
+    rows: rows.map((row, idx) => [
+      String(idx + 1),
+      ...bandLimitRowCells(row, currencyRate),
+    ]),
+  });
 }
 
 function buildColumns(

@@ -4,6 +4,7 @@ import {
   listUserProfiles,
   updateUserProfileRole,
 } from "../../api/apiUserProfiles";
+import { MY_PERMISSION_CODES_QUERY_KEY } from "../permissions/useSessionPermissions";
 
 export function useUserProfilesQuery() {
   return useQuery({
@@ -28,6 +29,9 @@ export function useUpdateUserRole() {
       toast.success("تم تحديث صلاحية المستخدم");
       void queryClient.invalidateQueries({ queryKey: ["user_profiles"] });
       void queryClient.invalidateQueries({ queryKey: ["user"] });
+      void queryClient.invalidateQueries({
+        queryKey: [MY_PERMISSION_CODES_QUERY_KEY],
+      });
     },
     onError: (err: Error) => {
       toast.error(err.message || "تعذر التحديث");

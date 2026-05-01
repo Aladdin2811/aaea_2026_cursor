@@ -6,6 +6,7 @@ import Select, {
 } from "react-select";
 import type { AllEmployeesWithRelations } from "../../api/apiAllEmployees";
 import { useFetchAllEmployees } from "../../features/employees/allEmployees/useEmployees";
+import { REACT_SELECT_MENU_Z_INDEX } from "./reactSelectMenuZIndex";
 
 type Option = { value: number; label: string };
 
@@ -106,11 +107,11 @@ const selectStyles: StylesConfig<Option, false, GroupBase<Option>> = {
     overflow: "hidden",
     boxShadow:
       "0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08)",
-    zIndex: 50,
+    zIndex: REACT_SELECT_MENU_Z_INDEX,
   }),
   menuPortal: (base) => ({
     ...base,
-    zIndex: 50,
+    zIndex: REACT_SELECT_MENU_Z_INDEX,
   }),
   menuList: (base) => ({ ...base, padding: 4 }),
   option: (base, state) => ({

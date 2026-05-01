@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "check:nav": "node scripts/check-nav-routes.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
