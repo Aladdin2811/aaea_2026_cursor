@@ -8,6 +8,8 @@ import {
   type DataTableColumn,
 } from "../../../components/ui/data-table";
 import { formatOptionalText, stringValue } from "../../../lib/displayValue";
+import { downloadExcelXls, printRtlTable } from "../../../lib/tableExport";
+import { useSessionPermissions } from "../../permissions/useSessionPermissions";
 import { useFetchCurrentYear } from "../../years/currentYear/useCurrentYear";
 import { DeleteVacationConfirmDialog } from "./DeleteVacationConfirmDialog";
 import { VacationFormDialog } from "./VacationFormDialog";
@@ -47,6 +49,8 @@ function ToolbarCount({ n }: { n: number }): ReactNode {
     </p>
   );
 }
+
+const EXPORT_HEADERS = ["من", "إلى", "نوع الإجازة", "عدد الأيام", "ملاحظات"] as const;
 
 type VacationTypeLabel = {
   id: number;
@@ -92,6 +96,7 @@ export default function VacationsTable() {
   const { createVacation, isCreating } = useCreateVacation();
   const { updateVacation, isUpdating } = useUpdateVacation();
   const { deleteVacation, isDeleting } = useDeleteVacation();
+  const { codeSet } = useSessionPermissions();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
@@ -105,48 +110,61 @@ export default function VacationsTable() {
   const tableLoading = yearContextLoading || listLoading;
   const rows = data ?? [];
   const isSubmitting = isCreating || isUpdating;
+  const canCreate = codeSet.has("table.vacations.create");
+  const canUpdate = codeSet.has("table.vacations.update");
+  const canDelete = codeSet.has("table.vacations.delete");
+  const canPrint = codeSet.has("table.vacations.print");
+  const canExport = codeSet.has("table.vacations.export");
 
   const columns = useMemo<DataTableColumn<VacationsWithRelations>[]>(
-    () => [
-      {
+    () => {
+      const cols: DataTableColumn<VacationsWithRelations>[] = [];
+      if (canUpdate || canDelete) {
+        cols.unshift({
         id: "actions",
         header: "إجراءات",
-        className: "w-[6.5rem] min-w-[6.5rem]",
+        className:
+          canUpdate && canDelete ? "w-[6.5rem] min-w-[6.5rem]" : "w-[3.75rem] min-w-[3.75rem]",
         thClassName: "!whitespace-normal text-center",
         cell: (row) => (
           <div className="flex items-center justify-center gap-1">
-            <button
-              type="button"
-              className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/60 hover:text-emerald-800 disabled:opacity-50"
-              aria-label="تعديل"
-              disabled={isDeleting || isSubmitting}
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditing(row);
-                setDialogMode("edit");
-                setDialogOpen(true);
-              }}
-            >
-              <Pencil className="size-4" strokeWidth={1.75} />
-            </button>
-            <button
-              type="button"
-              className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50/60 hover:text-red-800 disabled:opacity-50"
-              aria-label="حذف"
-              disabled={isDeleting || isSubmitting}
-              onClick={(e) => {
-                e.stopPropagation();
-                setPendingDelete(row);
-              }}
-            >
-              <Trash2 className="size-4" strokeWidth={1.75} />
-            </button>
+            {canUpdate ? (
+              <button
+                type="button"
+                className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/60 hover:text-emerald-800 disabled:opacity-50"
+                aria-label="تعديل"
+                disabled={isDeleting || isSubmitting}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditing(row);
+                  setDialogMode("edit");
+                  setDialogOpen(true);
+                }}
+              >
+                <Pencil className="size-4" strokeWidth={1.75} />
+              </button>
+            ) : null}
+            {canDelete ? (
+              <button
+                type="button"
+                className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50/60 hover:text-red-800 disabled:opacity-50"
+                aria-label="حذف"
+                disabled={isDeleting || isSubmitting}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPendingDelete(row);
+                }}
+              >
+                <Trash2 className="size-4" strokeWidth={1.75} />
+              </button>
+            ) : null}
           </div>
         ),
         getSortValue: () => 0,
         contentAlign: "center",
-      },
-      {
+      });
+      }
+      cols.push({
         id: "from_date",
         header: "من",
         className: "min-w-20",
@@ -214,9 +232,10 @@ export default function VacationsTable() {
           </span>
         ),
         getSortValue: (r) => stringValue(r.notes),
-      },
-    ],
-    [isDeleting, isSubmitting],
+      });
+      return cols;
+    },
+    [canDelete, canUpdate, isDeleting, isSubmitting],
   );
 
   if (isError) {
@@ -277,20 +296,75 @@ export default function VacationsTable() {
                 ) : (
                   <span className="hidden min-h-0 sm:block sm:min-w-0" />
                 )}
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={!fetchEnabled || isSubmitting}
-                  title={!fetchEnabled ? "اختر العام والموظف أولاً" : undefined}
-                  onClick={() => {
-                    setEditing(null);
-                    setDialogMode("create");
-                    setDialogOpen(true);
-                  }}
-                >
-                  <Plus className="size-5 shrink-0" strokeWidth={1.75} />
-                  إجازة جديدة
-                </button>
+                {canPrint ? (
+                  <button
+                    type="button"
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                    disabled={rows.length === 0}
+                    onClick={() =>
+                      printRtlTable({
+                        documentTitle: "طباعة الإجازات",
+                        caption: "جدول الإجازات",
+                        headers: ["#", ...EXPORT_HEADERS],
+                        rows: rows.map((r, i) => [
+                          String(i + 1),
+                          formatDateYmdSlashes(r.from_date),
+                          formatDateYmdSlashes(r.to_date),
+                          vacationTypeRowLabel(
+                            firstEmbed(r.vacation_type) as VacationTypeLabel | undefined,
+                            r.vacation_type_id ?? null,
+                          ),
+                          r.days_count != null ? String(r.days_count) : "—",
+                          formatOptionalText(r.notes),
+                        ]),
+                      })
+                    }
+                  >
+                    طباعة
+                  </button>
+                ) : null}
+                {canExport ? (
+                  <button
+                    type="button"
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                    disabled={rows.length === 0}
+                    onClick={() =>
+                      downloadExcelXls({
+                        filename: "vacations.xls",
+                        sheetName: "vacations",
+                        headers: [...EXPORT_HEADERS],
+                        rows: rows.map((r) => [
+                          formatDateYmdSlashes(r.from_date),
+                          formatDateYmdSlashes(r.to_date),
+                          vacationTypeRowLabel(
+                            firstEmbed(r.vacation_type) as VacationTypeLabel | undefined,
+                            r.vacation_type_id ?? null,
+                          ),
+                          r.days_count != null ? String(r.days_count) : "—",
+                          formatOptionalText(r.notes),
+                        ]),
+                      })
+                    }
+                  >
+                    تصدير XLS
+                  </button>
+                ) : null}
+                {canCreate ? (
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={!fetchEnabled || isSubmitting}
+                    title={!fetchEnabled ? "اختر العام والموظف أولاً" : undefined}
+                    onClick={() => {
+                      setEditing(null);
+                      setDialogMode("create");
+                      setDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="size-5 shrink-0" strokeWidth={1.75} />
+                    إجازة جديدة
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>

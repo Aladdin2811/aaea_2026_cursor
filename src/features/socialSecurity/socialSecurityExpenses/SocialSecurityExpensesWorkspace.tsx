@@ -14,6 +14,7 @@ import {
   type DataTableColumn,
 } from "../../../components/ui/data-table";
 import { formatOptionalText, stringValue } from "../../../lib/displayValue";
+import { useSessionPermissions } from "../../permissions/useSessionPermissions";
 import {
   computeFinalReimbursementTnd,
   filterApplicableBandLimits,
@@ -27,6 +28,7 @@ import {
   type BandLimitMatchRow,
   type BandPercentageMatchRow,
 } from "../../../lib/socialSecurityHealthReimbursement";
+import { downloadExcelXls, printRtlTable } from "../../../lib/tableExport";
 import { useFetchAllEmployees } from "../../employees/allEmployees/useEmployees";
 import { useFetchMonths } from "../../months/useMonths";
 import { useFetchCurrentYear } from "../../years/currentYear/useCurrentYear";
@@ -215,6 +217,12 @@ export default function SocialSecurityExpensesWorkspace() {
   const { createExpensesAsync, isCreating } = useCreateSocialSecurityExpenses();
   const { updateExpenses, isUpdating } = useUpdateSocialSecurityExpenses();
   const { deleteExpense, isDeleting } = useDeleteSocialSecurityExpenses();
+  const { codeSet } = useSessionPermissions();
+  const canCreate = codeSet.has("table.social_security_expenses.create");
+  const canUpdate = codeSet.has("table.social_security_expenses.update");
+  const canDelete = codeSet.has("table.social_security_expenses.delete");
+  const canPrint = codeSet.has("table.social_security_expenses.print");
+  const canExport = codeSet.has("table.social_security_expenses.export");
 
   const [draftRows, setDraftRows] = useState<DraftRow[]>([]);
 
@@ -445,45 +453,52 @@ export default function SocialSecurityExpensesWorkspace() {
     }
   };
 
-  const columns = useMemo<DataTableColumn<SocialSecurityExpensesWithRelations>[]>(
-    () => [
-      {
+  const columns = useMemo<DataTableColumn<SocialSecurityExpensesWithRelations>[]>(() => {
+    const cols: DataTableColumn<SocialSecurityExpensesWithRelations>[] = [];
+    if (canUpdate || canDelete) {
+      cols.unshift({
         id: "actions",
         header: "إجراءات",
-        className: "w-[6.5rem] min-w-[6.5rem]",
+        className:
+          canUpdate && canDelete ? "w-[6.5rem] min-w-[6.5rem]" : "w-[3.75rem] min-w-[3.75rem]",
         thClassName: "!whitespace-normal text-center",
         cell: (r) => (
           <div className="flex items-center justify-center gap-1">
-            <button
-              type="button"
-              className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/60 hover:text-emerald-800 disabled:opacity-50"
-              aria-label="تعديل"
-              disabled={isDeleting || isUpdating}
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditing(r);
-              }}
-            >
-              <Pencil className="size-4" strokeWidth={1.75} />
-            </button>
-            <button
-              type="button"
-              className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50/60 hover:text-red-800 disabled:opacity-50"
-              aria-label="حذف"
-              disabled={isDeleting || isUpdating}
-              onClick={(e) => {
-                e.stopPropagation();
-                setPendingDelete(r);
-              }}
-            >
-              <Trash2 className="size-4" strokeWidth={1.75} />
-            </button>
+            {canUpdate ? (
+              <button
+                type="button"
+                className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/60 hover:text-emerald-800 disabled:opacity-50"
+                aria-label="تعديل"
+                disabled={isDeleting || isUpdating}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditing(r);
+                }}
+              >
+                <Pencil className="size-4" strokeWidth={1.75} />
+              </button>
+            ) : null}
+            {canDelete ? (
+              <button
+                type="button"
+                className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50/60 hover:text-red-800 disabled:opacity-50"
+                aria-label="حذف"
+                disabled={isDeleting || isUpdating}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPendingDelete(r);
+                }}
+              >
+                <Trash2 className="size-4" strokeWidth={1.75} />
+              </button>
+            ) : null}
           </div>
         ),
         getSortValue: () => 0,
         contentAlign: "center",
-      },
-      {
+      });
+    }
+    cols.push({
         id: "band",
         header: "البند",
         cell: (r) => (
@@ -546,10 +561,9 @@ export default function SocialSecurityExpensesWorkspace() {
           </span>
         ),
         getSortValue: (r) => stringValue(r.notes),
-      },
-    ],
-    [isDeleting, isUpdating],
-  );
+      });
+    return cols;
+  }, [canDelete, canUpdate, isDeleting, isUpdating]);
 
   const monthOptions = useMemo(() => {
     const m = months ?? [];
@@ -640,7 +654,7 @@ export default function SocialSecurityExpensesWorkspace() {
             type="button"
             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
             onClick={handleAddDraftRow}
-            disabled={!listEnabled || isCreating}
+            disabled={!canCreate || !listEnabled || isCreating}
           >
             <Plus className="size-4" strokeWidth={1.75} />
             صف جديد
@@ -786,7 +800,7 @@ export default function SocialSecurityExpensesWorkspace() {
             type="button"
             className="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:opacity-50"
             onClick={() => void saveDraftRows()}
-            disabled={!listEnabled || isCreating || draftRows.length === 0}
+            disabled={!canCreate || !listEnabled || isCreating || draftRows.length === 0}
           >
             {isCreating ? "جاري الحفظ…" : "حفظ المصروفات"}
           </button>
@@ -795,9 +809,70 @@ export default function SocialSecurityExpensesWorkspace() {
 
       {listEnabled ? (
         <section className="space-y-2">
-          <h2 className="text-base font-semibold text-slate-900">
-            المصروفات المسجّلة لهذا الشهر
-          </h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base font-semibold text-slate-900">
+              المصروفات المسجّلة لهذا الشهر
+            </h2>
+            <div className="flex items-center gap-2">
+              {canPrint ? (
+                <button
+                  type="button"
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  disabled={(savedRows ?? []).length === 0}
+                  onClick={() =>
+                    printRtlTable({
+                      documentTitle: "طباعة مصروفات الضمان الاجتماعي",
+                      caption: "جدول مصروفات الضمان الاجتماعي",
+                      headers: ["#", "البند", "التصنيف", "المبلغ الأصلي", "التعويض", "ملاحظات"],
+                      rows: (savedRows ?? []).map((r, i) => [
+                        String(i + 1),
+                        formatOptionalText(
+                          firstEmbed(r.social_security_band)?.social_security_band_name,
+                        ),
+                        formatOptionalText(
+                          firstEmbed(r.social_security_classification)
+                            ?.social_security_classification_name,
+                        ),
+                        formatOptionalText(String(r.original_amount ?? "")),
+                        formatOptionalText(String(r.final_amount ?? "")),
+                        formatOptionalText(r.notes),
+                      ]),
+                    })
+                  }
+                >
+                  طباعة
+                </button>
+              ) : null}
+              {canExport ? (
+                <button
+                  type="button"
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  disabled={(savedRows ?? []).length === 0}
+                  onClick={() =>
+                    downloadExcelXls({
+                      filename: "social_security_expenses.xls",
+                      sheetName: "social_security_expenses",
+                      headers: ["البند", "التصنيف", "المبلغ الأصلي", "التعويض", "ملاحظات"],
+                      rows: (savedRows ?? []).map((r) => [
+                        formatOptionalText(
+                          firstEmbed(r.social_security_band)?.social_security_band_name,
+                        ),
+                        formatOptionalText(
+                          firstEmbed(r.social_security_classification)
+                            ?.social_security_classification_name,
+                        ),
+                        formatOptionalText(String(r.original_amount ?? "")),
+                        formatOptionalText(String(r.final_amount ?? "")),
+                        formatOptionalText(r.notes),
+                      ]),
+                    })
+                  }
+                >
+                  تصدير XLS
+                </button>
+              ) : null}
+            </div>
+          </div>
           {savedError != null ? (
             <p dir="rtl" className="text-destructive text-sm" role="alert">
               {savedError instanceof Error

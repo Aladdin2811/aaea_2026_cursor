@@ -7,7 +7,10 @@ import {
   type DataTableColumn,
 } from "../../components/ui/data-table";
 import { formatOptionalText, stringValue } from "../../lib/displayValue";
+import { downloadExcelXls, printRtlTable } from "../../lib/tableExport";
+import { useSessionPermissions } from "../permissions/useSessionPermissions";
 import { CertifiedProgramFormDialog } from "./CertifiedProgramFormDialog";
+import { DeleteCertifiedProgramConfirmDialog } from "./DeleteCertifiedProgramConfirmDialog";
 import {
   useCreateCertifiedProgram,
   useDeleteCertifiedProgram,
@@ -51,6 +54,14 @@ function ToolbarCount({ n }: { n: number }): ReactNode {
     </p>
   );
 }
+const EXPORT_HEADERS = [
+  "المعرف",
+  "البرنامج / النشاط",
+  "الأهداف",
+  "السنة",
+  "النوع",
+  "التفصيلي",
+] as const;
 
 export default function CertifiedProgramsTable({
   yearId,
@@ -61,19 +72,28 @@ export default function CertifiedProgramsTable({
   const { createCertifiedProgram, isCreating } = useCreateCertifiedProgram();
   const { updateCertifiedProgram, isUpdating } = useUpdateCertifiedProgram();
   const { deleteCertifiedProgram, isDeleting } = useDeleteCertifiedProgram();
+  const { codeSet } = useSessionPermissions();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [editing, setEditing] = useState<CertifiedProgramWithRelations | null>(
     null,
   );
+  const [pendingDelete, setPendingDelete] =
+    useState<CertifiedProgramWithRelations | null>(null);
 
   const rows = useMemo(() => data ?? [], [data]);
   const isSubmitting = isCreating || isUpdating;
+  const canCreate = codeSet.has("table.certified_programs.create");
+  const canUpdate = codeSet.has("table.certified_programs.update");
+  const canDelete = codeSet.has("table.certified_programs.delete");
+  const canPrint = codeSet.has("table.certified_programs.print");
+  const canExport = codeSet.has("table.certified_programs.export");
   const listLoading = Boolean(yearId) && (isLoading || isFetching);
 
   const columns = useMemo<DataTableColumn<CertifiedProgramWithRelations>[]>(
-    () => [
+    () => {
+      const cols: DataTableColumn<CertifiedProgramWithRelations>[] = [
       {
         id: "id",
         header: "المعرّف",
@@ -151,53 +171,55 @@ export default function CertifiedProgramsTable({
         ),
         getSortValue: (r) => stringValue(r.detailed?.detailed_name ?? r.detailed_id),
       },
-      {
-        id: "actions",
-        header: "إجراءات",
-        className: "min-w-[7.5rem] w-32",
-        thClassName: "!whitespace-normal text-center",
-        cell: (row) => (
-          <div className="flex items-center justify-center gap-1">
-            <button
-              type="button"
-              className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/60 hover:text-emerald-800 disabled:opacity-50"
-              aria-label="تعديل"
-              disabled={isDeleting || isSubmitting}
-              onClick={(e) => {
-                e.stopPropagation();
-                setEditing(row);
-                setDialogMode("edit");
-                setDialogOpen(true);
-              }}
-            >
-              <Pencil className="size-4" strokeWidth={1.75} />
-            </button>
-            <button
-              type="button"
-              className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50/60 hover:text-red-800 disabled:opacity-50"
-              aria-label="حذف"
-              disabled={isDeleting || isSubmitting}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (
-                  !window.confirm(
-                    `تأكيد حذف النشاط المعتمد «${row.program_name ?? `#${row.id}`}»؟`,
-                  )
-                ) {
-                  return;
-                }
-                deleteCertifiedProgram(row.id);
-              }}
-            >
-              <Trash2 className="size-4" strokeWidth={1.75} />
-            </button>
-          </div>
-        ),
-        getSortValue: () => 0,
-        contentAlign: "center",
-      },
-    ],
-    [isDeleting, isSubmitting, deleteCertifiedProgram],
+    ];
+      if (canUpdate || canDelete) {
+        cols.unshift({
+          id: "actions",
+          header: "إجراءات",
+          className:
+            canUpdate && canDelete ? "min-w-[6.5rem] w-[6.5rem]" : "min-w-[3.75rem] w-[3.75rem]",
+          thClassName: "!whitespace-normal text-center",
+          cell: (row) => (
+            <div className="flex items-center justify-center gap-1">
+              {canUpdate ? (
+                <button
+                  type="button"
+                  className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/60 hover:text-emerald-800 disabled:opacity-50"
+                  aria-label="تعديل"
+                  disabled={isDeleting || isSubmitting}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditing(row);
+                    setDialogMode("edit");
+                    setDialogOpen(true);
+                  }}
+                >
+                  <Pencil className="size-4" strokeWidth={1.75} />
+                </button>
+              ) : null}
+              {canDelete ? (
+                <button
+                  type="button"
+                  className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-red-200 hover:bg-red-50/60 hover:text-red-800 disabled:opacity-50"
+                  aria-label="حذف"
+                  disabled={isDeleting || isSubmitting}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPendingDelete(row);
+                  }}
+                >
+                  <Trash2 className="size-4" strokeWidth={1.75} />
+                </button>
+              ) : null}
+            </div>
+          ),
+          getSortValue: () => 0,
+          contentAlign: "center",
+        });
+      }
+      return cols;
+    },
+    [canDelete, canUpdate, isDeleting, isSubmitting],
   );
 
   if (loadingYearContext && yearId == null) {
@@ -233,20 +255,73 @@ export default function CertifiedProgramsTable({
     <div className="space-y-4" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {!listLoading && rows.length > 0 ? <ToolbarCount n={rows.length} /> : <span />}
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
-          disabled={!yearId || isSubmitting}
-          title={!yearId ? "اختر سنة محاسبية أولاً" : undefined}
-          onClick={() => {
-            setEditing(null);
-            setDialogMode("create");
-            setDialogOpen(true);
-          }}
-        >
-          <Plus className="size-5 shrink-0" strokeWidth={1.75} />
-          نشاط معتمد جديد
-        </button>
+        <div className="flex items-center gap-2">
+          {canPrint ? (
+            <button
+              type="button"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              disabled={rows.length === 0}
+              onClick={() =>
+                printRtlTable({
+                  documentTitle: "طباعة الأنشطة المعتمدة",
+                  caption: "جدول الأنشطة المعتمدة",
+                  headers: ["#", ...EXPORT_HEADERS],
+                  rows: rows.map((r, i) => [
+                    String(i + 1),
+                    String(r.id),
+                    formatOptionalText(r.program_name),
+                    formatOptionalText(r.objectives),
+                    yearCellLabel(r),
+                    no3CellLabel(r),
+                    detailedCellLabel(r),
+                  ]),
+                })
+              }
+            >
+              طباعة
+            </button>
+          ) : null}
+          {canExport ? (
+            <button
+              type="button"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              disabled={rows.length === 0}
+              onClick={() =>
+                downloadExcelXls({
+                  filename: "certified_programs.xls",
+                  sheetName: "certified_programs",
+                  headers: [...EXPORT_HEADERS],
+                  rows: rows.map((r) => [
+                    String(r.id),
+                    formatOptionalText(r.program_name),
+                    formatOptionalText(r.objectives),
+                    yearCellLabel(r),
+                    no3CellLabel(r),
+                    detailedCellLabel(r),
+                  ]),
+                })
+              }
+            >
+              تصدير XLS
+            </button>
+          ) : null}
+          {canCreate ? (
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
+              disabled={!yearId || isSubmitting}
+              title={!yearId ? "اختر سنة محاسبية أولاً" : undefined}
+              onClick={() => {
+                setEditing(null);
+                setDialogMode("create");
+                setDialogOpen(true);
+              }}
+            >
+              <Plus className="size-5 shrink-0" strokeWidth={1.75} />
+              نشاط معتمد جديد
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <DataTable<CertifiedProgramWithRelations>
@@ -299,6 +374,22 @@ export default function CertifiedProgramsTable({
               },
             );
           }
+        }}
+      />
+      <DeleteCertifiedProgramConfirmDialog
+        open={pendingDelete != null}
+        row={pendingDelete}
+        isDeleting={isDeleting}
+        onCancel={() => {
+          if (!isDeleting) setPendingDelete(null);
+        }}
+        onConfirm={() => {
+          if (!pendingDelete) return;
+          deleteCertifiedProgram(pendingDelete.id, {
+            onSuccess: () => {
+              setPendingDelete(null);
+            },
+          });
         }}
       />
     </div>
