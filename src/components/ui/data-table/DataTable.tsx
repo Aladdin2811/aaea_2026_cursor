@@ -59,6 +59,8 @@ export type DataTableProps<T> = {
   footer?: ReactNode;
   /** min-width للعمود الرئيسي عند الضيق */
   minTableWidth?: string;
+  /** عرض عمود الترقيم (#) عند تفعيل showIndex */
+  indexColumnWidth?: string;
 };
 
 type SortState = {
@@ -95,6 +97,7 @@ export function DataTable<T>({
   sortable: sortEnabled = true,
   footer,
   minTableWidth = "min(100%, 720px)",
+  indexColumnWidth = "2.75rem",
 }: DataTableProps<T>) {
   const headingId = useId();
   const [sort, setSort] = useState<SortState>({
@@ -228,7 +231,8 @@ export function DataTable<T>({
             <DataTableHeadCell
               density={density}
               contentAlign="center"
-              className="w-10 min-w-10"
+              className="shrink-0"
+              style={{ width: indexColumnWidth, minWidth: indexColumnWidth }}
             >
               {indexHeader}
             </DataTableHeadCell>
@@ -292,6 +296,7 @@ export function DataTable<T>({
             >
               {showIndex && (
                 <DataTableCell
+                  style={{ width: indexColumnWidth, minWidth: indexColumnWidth }}
                   density={density}
                   contentAlign="center"
                   className="tabular-nums text-slate-500"
