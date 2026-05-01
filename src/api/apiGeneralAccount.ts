@@ -22,6 +22,10 @@ export type GeneralAccountWithType = GeneralAccountRow & {
   /** PostgREST قد يُرجع كائناً أو مصفوفة حسب العلاقة */
   account_type: AccountTypeEmbed | AccountTypeEmbed[] | null;
 };
+export type CreateGeneralAccountInput = Partial<Omit<GeneralAccountRow, "id">> & {
+  id?: number;
+};
+export type UpdateGeneralAccountInput = Partial<Omit<GeneralAccountRow, "id">>;
 
 const tableName = "general_account" as const;
 
@@ -104,4 +108,49 @@ export async function getById(
     throw new Error("لا يمكن الحصول على بيانات الحساب العام");
   }
   return data as unknown as GeneralAccountWithType;
+}
+
+export async function createGeneralAccount(
+  input: CreateGeneralAccountInput,
+): Promise<GeneralAccountWithType> {
+  const payload = { ...input };
+  delete payload.id;
+  const { data, error } = await supabase
+    .from(tableName)
+    .insert(payload)
+    .select(selectWithType)
+    .single();
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن إضافة الحساب العام");
+  }
+  return data as unknown as GeneralAccountWithType;
+}
+
+export async function updateGeneralAccount(
+  id: number | string,
+  patch: UpdateGeneralAccountInput,
+): Promise<GeneralAccountWithType> {
+  const rowId = parseNumericId(id, "رقم الحساب العام");
+  const { data, error } = await supabase
+    .from(tableName)
+    .update(patch)
+    .eq("id", rowId)
+    .select(selectWithType)
+    .single();
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن تعديل الحساب العام");
+  }
+  return data as unknown as GeneralAccountWithType;
+}
+
+export async function deleteGeneralAccount(id: number | string): Promise<unknown> {
+  const rowId = parseNumericId(id, "رقم الحساب العام");
+  const { data, error } = await supabase.from(tableName).delete().eq("id", rowId);
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن حذف الحساب العام");
+  }
+  return data;
 }

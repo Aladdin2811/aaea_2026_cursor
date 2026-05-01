@@ -31,6 +31,10 @@ export type BabWithRelations = BabRow & {
   account_type: AccountTypeEmbed | AccountTypeEmbed[] | null;
   general_account: GeneralAccountEmbed | GeneralAccountEmbed[] | null;
 };
+export type CreateBabInput = Partial<Omit<BabRow, "id">> & {
+  id?: number;
+};
+export type UpdateBabInput = Partial<Omit<BabRow, "id">>;
 
 const selectBabEmbed = `
   id, 
@@ -188,4 +192,37 @@ export async function deleteBab(id: number | string): Promise<unknown> {
     throw new Error("حدث خطأ عند حذف الباب");
   }
   return data;
+}
+
+export async function createBab(input: CreateBabInput): Promise<BabWithRelations> {
+  const payload = { ...input };
+  delete payload.id;
+  const { data, error } = await supabase
+    .from("bab")
+    .insert(payload)
+    .select(selectBabEmbed)
+    .single();
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن إضافة الباب");
+  }
+  return data as unknown as BabWithRelations;
+}
+
+export async function updateBab(
+  id: number | string,
+  patch: UpdateBabInput,
+): Promise<BabWithRelations> {
+  const rowId = parseNumericId(id, "رقم الباب");
+  const { data, error } = await supabase
+    .from("bab")
+    .update(patch)
+    .eq("id", rowId)
+    .select(selectBabEmbed)
+    .single();
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن تعديل الباب");
+  }
+  return data as unknown as BabWithRelations;
 }

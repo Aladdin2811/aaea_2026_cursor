@@ -42,6 +42,10 @@ export type BandWithRelations = BandRow & {
   general_account: GeneralAccountEmbed | GeneralAccountEmbed[] | null;
   bab: BabEmbed | BabEmbed[] | null;
 };
+export type CreateBandInput = Partial<Omit<BandRow, "id">> & {
+  id?: number;
+};
+export type UpdateBandInput = Partial<Omit<BandRow, "id">>;
 
 const selectBandEmbed = `
   id, 
@@ -131,6 +135,49 @@ export async function getById(id: number | string): Promise<BandWithRelations> {
     throw new Error("لا يمكن الحصول على بيانات البند");
   }
   return data as unknown as BandWithRelations;
+}
+
+export async function createBand(input: CreateBandInput): Promise<BandWithRelations> {
+  const payload = { ...input };
+  delete payload.id;
+  const { data, error } = await supabase
+    .from("band")
+    .insert(payload)
+    .select(selectBandEmbed)
+    .single();
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن إضافة البند");
+  }
+  return data as unknown as BandWithRelations;
+}
+
+export async function updateBand(
+  id: number | string,
+  patch: UpdateBandInput,
+): Promise<BandWithRelations> {
+  const rowId = parseNumericId(id, "رقم البند");
+  const { data, error } = await supabase
+    .from("band")
+    .update(patch)
+    .eq("id", rowId)
+    .select(selectBandEmbed)
+    .single();
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن تعديل البند");
+  }
+  return data as unknown as BandWithRelations;
+}
+
+export async function deleteBand(id: number | string): Promise<unknown> {
+  const rowId = parseNumericId(id, "رقم البند");
+  const { data, error } = await supabase.from("band").delete().eq("id", rowId);
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن حذف البند");
+  }
+  return data;
 }
 
 export type JournalFilter = { field: string; value: unknown };

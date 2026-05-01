@@ -1,13 +1,23 @@
-import { useMemo, type ReactNode } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { type No3WithRelations } from "../../../api/apiNo3";
+import { useSessionPermissions } from "../../permissions/useSessionPermissions";
 import {
   DataTable,
   type DataTableColumn,
 } from "../../../components/ui/data-table";
 import { TableStatusBadge } from "../../../components/ui/TableStatusBadge";
 import { formatOptionalText, stringValue } from "../../../lib/displayValue";
+import { downloadExcelXls, printRtlTable } from "../../../lib/tableExport";
 import { useFetchNo3 } from "./useNo3";
+import {
+  useCreateNo3,
+  useDeleteNo3,
+  useUpdateNo3,
+} from "./useNo3";
+import { No3FormDialog } from "./No3FormDialog";
+import { DeleteNo3ConfirmDialog } from "./DeleteNo3ConfirmDialog";
 
 /** رأس عمود على سطرين (مناسب للعناوين الطويلة) */
 function ColHead({
@@ -48,8 +58,12 @@ function no3RowDetailedTo(
 function buildNo3Columns(
   bandId: string | undefined,
   babId: string | null,
+  canEdit: boolean,
+  canDelete: boolean,
+  onEdit: (row: No3WithRelations) => void,
+  onDelete: (row: No3WithRelations) => void,
 ): DataTableColumn<No3WithRelations>[] {
-  return [
+  const cols: DataTableColumn<No3WithRelations>[] = [
   {
     id: "name",
     header: "إسم النوع",
@@ -147,13 +161,66 @@ function buildNo3Columns(
     ),
     getSortValue: (r) => stringValue(r.description),
   },
-];
+  ];
+  if (canEdit || canDelete) {
+    cols.unshift({
+      id: "actions",
+      header: "الإجراءات",
+      className: "w-[112px] min-w-[112px]",
+      thClassName: "text-center",
+      contentAlign: "center",
+      cell: (row) => (
+        <div className="flex items-center justify-center gap-1">
+          {canEdit ? (
+            <button
+              type="button"
+              className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(row);
+              }}
+              aria-label="تعديل"
+              title="تعديل"
+            >
+              <Pencil className="size-4" />
+            </button>
+          ) : null}
+          {canDelete ? (
+            <button
+              type="button"
+              className="rounded-md p-1.5 text-red-600 hover:bg-red-50 hover:text-red-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(row);
+              }}
+              aria-label="حذف"
+              title="حذف"
+            >
+              <Trash2 className="size-4" />
+            </button>
+          ) : null}
+        </div>
+      ),
+      getSortValue: () => "",
+    });
+  }
+  return cols;
 }
 
 function Toolbar({
   babIdForBandPage,
+  rows,
+  canPrint,
+  canExport,
+  canCreate,
+  onAdd,
 }: {
   babIdForBandPage: string | null;
+  rows: No3WithRelations[];
+  canPrint: boolean;
+  canExport: boolean;
+  canCreate: boolean;
+  onAdd: () => void;
 }): ReactNode {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -178,6 +245,61 @@ function Toolbar({
       >
         تصنيف الحسابات
       </Link>
+      <div className="flex items-center gap-2">
+        {canCreate ? (
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-100"
+            onClick={onAdd}
+          >
+            <Plus className="size-4" />
+            إضافة
+          </button>
+        ) : null}
+        {canPrint ? (
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            disabled={rows.length === 0}
+            onClick={() =>
+              printRtlTable({
+                documentTitle: "طباعة الأنواع",
+                caption: "جدول الأنواع",
+                headers: ["#", "اسم النوع", "الكود", "الحالة"],
+                rows: rows.map((r, i) => [
+                  String(i + 1),
+                  formatOptionalText(r.no3_name),
+                  formatOptionalText(r.no3_code),
+                  r.status ? "مفعل" : "غير مفعل",
+                ]),
+              })
+            }
+          >
+            طباعة
+          </button>
+        ) : null}
+        {canExport ? (
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            disabled={rows.length === 0}
+            onClick={() =>
+              downloadExcelXls({
+                filename: "no3.xls",
+                sheetName: "no3",
+                headers: ["اسم النوع", "الكود", "الحالة"],
+                rows: rows.map((r) => [
+                  formatOptionalText(r.no3_name),
+                  formatOptionalText(r.no3_code),
+                  r.status ? "مفعل" : "غير مفعل",
+                ]),
+              })
+            }
+          >
+            تصدير XLS
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -187,7 +309,19 @@ export default function No3Table() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { isLoading, data, error, isError } = useFetchNo3();
+  const createMutation = useCreateNo3();
+  const updateMutation = useUpdateNo3();
+  const deleteMutation = useDeleteNo3();
+  const { codeSet } = useSessionPermissions();
   const rows = useMemo(() => data ?? [], [data]);
+  const canCreate = codeSet.has("table.no3.create");
+  const canEdit = codeSet.has("table.no3.update");
+  const canDelete = codeSet.has("table.no3.delete");
+  const canPrint = codeSet.has("table.no3.print");
+  const canExport = codeSet.has("table.no3.export");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<No3WithRelations | null>(null);
+  const [deletingRow, setDeletingRow] = useState<No3WithRelations | null>(null);
 
   /** `/settings/band/:id` يتوقع `bab_id` */
   const babIdForBandPage = useMemo((): string | null => {
@@ -198,8 +332,16 @@ export default function No3Table() {
   }, [searchParams, rows]);
 
   const columns = useMemo(
-    () => buildNo3Columns(id, babIdForBandPage),
-    [id, babIdForBandPage],
+    () =>
+      buildNo3Columns(
+        id,
+        babIdForBandPage,
+        canEdit,
+        canDelete,
+        (row) => setEditingRow(row),
+        (row) => setDeletingRow(row),
+      ),
+    [id, babIdForBandPage, canEdit, canDelete],
   );
 
   if (id == null || id === "") {
@@ -240,7 +382,16 @@ export default function No3Table() {
         getRowId={(row) => row.id}
         showIndex
         indexHeader="#"
-        toolbar={<Toolbar babIdForBandPage={babIdForBandPage} />}
+        toolbar={
+          <Toolbar
+            babIdForBandPage={babIdForBandPage}
+            rows={rows}
+            canCreate={canCreate}
+            canPrint={canPrint}
+            canExport={canExport}
+            onAdd={() => setIsCreateOpen(true)}
+          />
+        }
         caption={`الأنواع (البند ${id})`}
         density="comfortable"
         minTableWidth="100%"
@@ -253,6 +404,47 @@ export default function No3Table() {
             ? "cursor-pointer"
             : undefined
         }
+      />
+      <No3FormDialog
+        open={isCreateOpen}
+        mode="create"
+        initial={null}
+        bandId={id ? Number(id) : null}
+        babId={babIdForBandPage ? Number(babIdForBandPage) : null}
+        isSubmitting={createMutation.isPending}
+        onClose={() => setIsCreateOpen(false)}
+        onCreate={(input) => {
+          createMutation.mutate(input, {
+            onSuccess: () => setIsCreateOpen(false),
+          });
+        }}
+        onUpdate={() => undefined}
+      />
+      <No3FormDialog
+        open={editingRow != null}
+        mode="edit"
+        initial={editingRow}
+        bandId={id ? Number(id) : null}
+        babId={babIdForBandPage ? Number(babIdForBandPage) : null}
+        isSubmitting={updateMutation.isPending}
+        onClose={() => setEditingRow(null)}
+        onCreate={() => undefined}
+        onUpdate={(payload) => {
+          updateMutation.mutate(payload, {
+            onSuccess: () => setEditingRow(null),
+          });
+        }}
+      />
+      <DeleteNo3ConfirmDialog
+        open={deletingRow != null}
+        row={deletingRow}
+        isSubmitting={deleteMutation.isPending}
+        onClose={() => setDeletingRow(null)}
+        onConfirm={(rowId) => {
+          deleteMutation.mutate(rowId, {
+            onSuccess: () => setDeletingRow(null),
+          });
+        }}
       />
     </div>
   );

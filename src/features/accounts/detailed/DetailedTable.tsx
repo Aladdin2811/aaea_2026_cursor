@@ -1,13 +1,23 @@
-import { useMemo, type ReactNode } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { type DetailedWithRelations } from "../../../api/apiDetailed";
+import { useSessionPermissions } from "../../permissions/useSessionPermissions";
 import {
   DataTable,
   type DataTableColumn,
 } from "../../../components/ui/data-table";
 import { TableStatusBadge } from "../../../components/ui/TableStatusBadge";
 import { formatOptionalText, stringValue } from "../../../lib/displayValue";
+import { downloadExcelXls, printRtlTable } from "../../../lib/tableExport";
 import { useFetchDetailed } from "./useDetailed";
+import {
+  useCreateDetailed,
+  useDeleteDetailed,
+  useUpdateDetailed,
+} from "./useDetailed";
+import { DetailedFormDialog } from "./DetailedFormDialog";
+import { DeleteDetailedConfirmDialog } from "./DeleteDetailedConfirmDialog";
 
 function pickFirst<T>(e: T | T[] | null | undefined): T | null {
   if (e == null) return null;
@@ -52,8 +62,12 @@ function buildDetailedColumns(
   no3Id: string | undefined,
   bandId: string | null,
   babId: string | null,
+  canEdit: boolean,
+  canDelete: boolean,
+  onEdit: (row: DetailedWithRelations) => void,
+  onDelete: (row: DetailedWithRelations) => void,
 ): DataTableColumn<DetailedWithRelations>[] {
-  return [
+  const cols: DataTableColumn<DetailedWithRelations>[] = [
     {
       id: "name",
       header: "إسم الحساب التفصيلي",
@@ -171,14 +185,41 @@ function buildDetailedColumns(
       contentAlign: "center",
     },
   ];
+  if (canEdit || canDelete) {
+    cols.unshift({
+      id: "actions",
+      header: "الإجراءات",
+      className: "w-[112px] min-w-[112px]",
+      thClassName: "text-center",
+      contentAlign: "center",
+      cell: (row) => (
+        <div className="flex items-center justify-center gap-1">
+          {canEdit ? <button type="button" className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Pencil className="size-4" /></button> : null}
+          {canDelete ? <button type="button" className="rounded-md p-1.5 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={(e) => { e.stopPropagation(); onDelete(row); }}><Trash2 className="size-4" /></button> : null}
+        </div>
+      ),
+      getSortValue: () => "",
+    });
+  }
+  return cols;
 }
 
 function Toolbar({
   bandIdForNo3Page,
   babQuery,
+  rows,
+  canPrint,
+  canExport,
+  canCreate,
+  onAdd,
 }: {
   bandIdForNo3Page: string | null;
   babQuery: string;
+  rows: DetailedWithRelations[];
+  canPrint: boolean;
+  canExport: boolean;
+  canCreate: boolean;
+  onAdd: () => void;
 }): ReactNode {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -203,6 +244,57 @@ function Toolbar({
       >
         تصنيف الحسابات
       </Link>
+      <div className="flex items-center gap-2">
+        {canCreate ? (
+          <button type="button" className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-100" onClick={onAdd}>
+            <Plus className="size-4" />
+            إضافة
+          </button>
+        ) : null}
+        {canPrint ? (
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            disabled={rows.length === 0}
+            onClick={() =>
+              printRtlTable({
+                documentTitle: "طباعة الحسابات التفصيلية",
+                caption: "جدول الحسابات التفصيلية",
+                headers: ["#", "اسم الحساب", "الكود", "الحالة"],
+                rows: rows.map((r, i) => [
+                  String(i + 1),
+                  formatOptionalText(r.detailed_name),
+                  formatOptionalText(r.detailed_code),
+                  r.status ? "مفعل" : "غير مفعل",
+                ]),
+              })
+            }
+          >
+            طباعة
+          </button>
+        ) : null}
+        {canExport ? (
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            disabled={rows.length === 0}
+            onClick={() =>
+              downloadExcelXls({
+                filename: "detailed.xls",
+                sheetName: "detailed",
+                headers: ["اسم الحساب", "الكود", "الحالة"],
+                rows: rows.map((r) => [
+                  formatOptionalText(r.detailed_name),
+                  formatOptionalText(r.detailed_code),
+                  r.status ? "مفعل" : "غير مفعل",
+                ]),
+              })
+            }
+          >
+            تصدير XLS
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -211,7 +303,19 @@ export default function DetailedTable() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { isLoading, data, error, isError } = useFetchDetailed();
+  const createMutation = useCreateDetailed();
+  const updateMutation = useUpdateDetailed();
+  const deleteMutation = useDeleteDetailed();
+  const { codeSet } = useSessionPermissions();
   const rows = useMemo(() => data ?? [], [data]);
+  const canCreate = codeSet.has("table.detailed.create");
+  const canEdit = codeSet.has("table.detailed.update");
+  const canDelete = codeSet.has("table.detailed.delete");
+  const canPrint = codeSet.has("table.detailed.print");
+  const canExport = codeSet.has("table.detailed.export");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<DetailedWithRelations | null>(null);
+  const [deletingRow, setDeletingRow] = useState<DetailedWithRelations | null>(null);
 
   /** `/settings/no3/:id` يتوقع `band_id` */
   const bandIdForNo3Page = useMemo((): string | null => {
@@ -241,8 +345,17 @@ export default function DetailedTable() {
   }, [searchParams, rows]);
 
   const columns = useMemo(
-    () => buildDetailedColumns(id, bandIdForNo3Page, babIdForContext),
-    [id, bandIdForNo3Page, babIdForContext],
+    () =>
+      buildDetailedColumns(
+        id,
+        bandIdForNo3Page,
+        babIdForContext,
+        canEdit,
+        canDelete,
+        (row) => setEditingRow(row),
+        (row) => setDeletingRow(row),
+      ),
+    [id, bandIdForNo3Page, babIdForContext, canEdit, canDelete],
   );
 
   if (id == null || id === "") {
@@ -284,11 +397,58 @@ export default function DetailedTable() {
         showIndex
         indexHeader="#"
         toolbar={
-          <Toolbar bandIdForNo3Page={bandIdForNo3Page} babQuery={babQuery} />
+          <Toolbar
+            bandIdForNo3Page={bandIdForNo3Page}
+            babQuery={babQuery}
+            rows={rows}
+            canCreate={canCreate}
+            canPrint={canPrint}
+            canExport={canExport}
+            onAdd={() => setIsCreateOpen(true)}
+          />
         }
         caption={`الحسابات التفصيلية (النوع ${id})`}
         density="comfortable"
         minTableWidth="100%"
+      />
+      <DetailedFormDialog
+        open={isCreateOpen}
+        mode="create"
+        initial={null}
+        parentIds={{
+          no3Id: id ? Number(id) : null,
+          bandId: bandIdForNo3Page ? Number(bandIdForNo3Page) : rows[0]?.band_id ?? null,
+          babId: babIdForContext ? Number(babIdForContext) : rows[0]?.bab_id ?? null,
+          generalAccountId: rows[0]?.general_account_id ?? null,
+          accountTypeId: rows[0]?.account_type_id ?? null,
+        }}
+        isSubmitting={createMutation.isPending}
+        onClose={() => setIsCreateOpen(false)}
+        onCreate={(input) => createMutation.mutate(input, { onSuccess: () => setIsCreateOpen(false) })}
+        onUpdate={() => undefined}
+      />
+      <DetailedFormDialog
+        open={editingRow != null}
+        mode="edit"
+        initial={editingRow}
+        parentIds={{
+          no3Id: id ? Number(id) : null,
+          bandId: bandIdForNo3Page ? Number(bandIdForNo3Page) : rows[0]?.band_id ?? null,
+          babId: babIdForContext ? Number(babIdForContext) : rows[0]?.bab_id ?? null,
+          generalAccountId: rows[0]?.general_account_id ?? null,
+          accountTypeId: rows[0]?.account_type_id ?? null,
+        }}
+        isSubmitting={updateMutation.isPending}
+        onClose={() => setEditingRow(null)}
+        onCreate={() => undefined}
+        onUpdate={(payload) => updateMutation.mutate(payload, { onSuccess: () => setEditingRow(null) })}
+      />
+      <DeleteDetailedConfirmDialog
+        open={deletingRow != null}
+        row={deletingRow}
+        isSubmitting={deleteMutation.isPending}
+        onClose={() => setDeletingRow(null)}
+        onConfirm={(rowId) => deleteMutation.mutate(rowId, { onSuccess: () => setDeletingRow(null) })}
       />
     </div>
   );

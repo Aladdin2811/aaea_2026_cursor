@@ -1,13 +1,19 @@
-import { useMemo, type ReactNode } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { type BandWithRelations } from "../../../api/apiBand";
+import { useSessionPermissions } from "../../permissions/useSessionPermissions";
 import {
   DataTable,
   type DataTableColumn,
 } from "../../../components/ui/data-table";
 import { TableStatusBadge } from "../../../components/ui/TableStatusBadge";
 import { formatOptionalText, stringValue } from "../../../lib/displayValue";
+import { downloadExcelXls, printRtlTable } from "../../../lib/tableExport";
 import { useFetchBand } from "./useBand";
+import { useCreateBand, useDeleteBand, useUpdateBand } from "./useBand";
+import { BandFormDialog } from "./BandFormDialog";
+import { DeleteBandConfirmDialog } from "./DeleteBandConfirmDialog";
 
 /** رأس عمود على سطرين (مناسب للعناوين الطويلة) */
 function ColHead({
@@ -44,8 +50,12 @@ function bandRowNo3To(
 
 function buildBandColumns(
   babId: string | undefined,
+  canEdit: boolean,
+  canDelete: boolean,
+  onEdit: (row: BandWithRelations) => void,
+  onDelete: (row: BandWithRelations) => void,
 ): DataTableColumn<BandWithRelations>[] {
-  return [
+  const cols: DataTableColumn<BandWithRelations>[] = [
   {
     id: "name",
     header: "إسم البند",
@@ -206,13 +216,40 @@ function buildBandColumns(
     ),
     getSortValue: (r) => stringValue(r.description),
   },
-];
+  ];
+  if (canEdit || canDelete) {
+    cols.unshift({
+      id: "actions",
+      header: "الإجراءات",
+      className: "w-[112px] min-w-[112px]",
+      thClassName: "text-center",
+      contentAlign: "center",
+      cell: (row) => (
+        <div className="flex items-center justify-center gap-1">
+          {canEdit ? <button type="button" className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900" onClick={(e) => { e.stopPropagation(); onEdit(row); }}><Pencil className="size-4" /></button> : null}
+          {canDelete ? <button type="button" className="rounded-md p-1.5 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={(e) => { e.stopPropagation(); onDelete(row); }}><Trash2 className="size-4" /></button> : null}
+        </div>
+      ),
+      getSortValue: () => "",
+    });
+  }
+  return cols;
 }
 
 function Toolbar({
   generalAccountId,
+  rows,
+  canPrint,
+  canExport,
+  canCreate,
+  onAdd,
 }: {
   generalAccountId: string | null;
+  rows: BandWithRelations[];
+  canPrint: boolean;
+  canExport: boolean;
+  canCreate: boolean;
+  onAdd: () => void;
 }): ReactNode {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -237,6 +274,57 @@ function Toolbar({
       >
         تصنيف الحسابات
       </Link>
+      <div className="flex items-center gap-2">
+        {canCreate ? (
+          <button type="button" className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-100" onClick={onAdd}>
+            <Plus className="size-4" />
+            إضافة
+          </button>
+        ) : null}
+        {canPrint ? (
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            disabled={rows.length === 0}
+            onClick={() =>
+              printRtlTable({
+                documentTitle: "طباعة البنود",
+                caption: "جدول البنود",
+                headers: ["#", "اسم البند", "الكود", "الحالة"],
+                rows: rows.map((r, i) => [
+                  String(i + 1),
+                  formatOptionalText(r.band_name),
+                  formatOptionalText(r.band_code),
+                  r.status ? "مفعل" : "غير مفعل",
+                ]),
+              })
+            }
+          >
+            طباعة
+          </button>
+        ) : null}
+        {canExport ? (
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            disabled={rows.length === 0}
+            onClick={() =>
+              downloadExcelXls({
+                filename: "band.xls",
+                sheetName: "band",
+                headers: ["اسم البند", "الكود", "الحالة"],
+                rows: rows.map((r) => [
+                  formatOptionalText(r.band_name),
+                  formatOptionalText(r.band_code),
+                  r.status ? "مفعل" : "غير مفعل",
+                ]),
+              })
+            }
+          >
+            تصدير XLS
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -246,8 +334,30 @@ export default function BandTable() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { isLoading, data, error, isError } = useFetchBand();
+  const createMutation = useCreateBand();
+  const updateMutation = useUpdateBand();
+  const deleteMutation = useDeleteBand();
+  const { codeSet } = useSessionPermissions();
   const rows = useMemo(() => data ?? [], [data]);
-  const columns = useMemo(() => buildBandColumns(id), [id]);
+  const canCreate = codeSet.has("table.band.create");
+  const canEdit = codeSet.has("table.band.update");
+  const canDelete = codeSet.has("table.band.delete");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<BandWithRelations | null>(null);
+  const [deletingRow, setDeletingRow] = useState<BandWithRelations | null>(null);
+  const columns = useMemo(
+    () =>
+      buildBandColumns(
+        id,
+        canEdit,
+        canDelete,
+        (row) => setEditingRow(row),
+        (row) => setDeletingRow(row),
+      ),
+    [id, canEdit, canDelete],
+  );
+  const canPrint = codeSet.has("table.band.print");
+  const canExport = codeSet.has("table.band.export");
 
   /** رابط /settings/bab/ يتوقع `general_account_id` وليس `bab_id` */
   const generalAccountIdForBabPage = useMemo((): string | null => {
@@ -297,7 +407,16 @@ export default function BandTable() {
         getRowId={(row) => row.id}
         showIndex
         indexHeader="#"
-        toolbar={<Toolbar generalAccountId={generalAccountIdForBabPage} />}
+        toolbar={
+          <Toolbar
+            generalAccountId={generalAccountIdForBabPage}
+            rows={rows}
+            canCreate={canCreate}
+            canPrint={canPrint}
+            canExport={canExport}
+            onAdd={() => setIsCreateOpen(true)}
+          />
+        }
         caption={`البنود (الباب ${id})`}
         density="comfortable"
         minTableWidth="100%"
@@ -308,6 +427,41 @@ export default function BandTable() {
         rowClassName={(row) =>
           bandRowNo3To(row, id) != null ? "cursor-pointer" : undefined
         }
+      />
+      <BandFormDialog
+        open={isCreateOpen}
+        mode="create"
+        initial={null}
+        parentIds={{
+          babId: id ? Number(id) : null,
+          generalAccountId: generalAccountIdForBabPage ? Number(generalAccountIdForBabPage) : rows[0]?.general_account_id ?? null,
+          accountTypeId: rows[0]?.account_type_id ?? null,
+        }}
+        isSubmitting={createMutation.isPending}
+        onClose={() => setIsCreateOpen(false)}
+        onCreate={(input) => createMutation.mutate(input, { onSuccess: () => setIsCreateOpen(false) })}
+        onUpdate={() => undefined}
+      />
+      <BandFormDialog
+        open={editingRow != null}
+        mode="edit"
+        initial={editingRow}
+        parentIds={{
+          babId: id ? Number(id) : null,
+          generalAccountId: generalAccountIdForBabPage ? Number(generalAccountIdForBabPage) : rows[0]?.general_account_id ?? null,
+          accountTypeId: rows[0]?.account_type_id ?? null,
+        }}
+        isSubmitting={updateMutation.isPending}
+        onClose={() => setEditingRow(null)}
+        onCreate={() => undefined}
+        onUpdate={(payload) => updateMutation.mutate(payload, { onSuccess: () => setEditingRow(null) })}
+      />
+      <DeleteBandConfirmDialog
+        open={deletingRow != null}
+        row={deletingRow}
+        isSubmitting={deleteMutation.isPending}
+        onClose={() => setDeletingRow(null)}
+        onConfirm={(rowId) => deleteMutation.mutate(rowId, { onSuccess: () => setDeletingRow(null) })}
       />
     </div>
   );

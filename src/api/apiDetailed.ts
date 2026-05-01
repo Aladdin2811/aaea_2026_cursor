@@ -46,6 +46,10 @@ export type DetailedWithRelations = DetailedRow & {
   no3: DetailedNo3Embed | DetailedNo3Embed[] | null;
   main_topics: MainTopicEmbed | MainTopicEmbed[] | null;
 };
+export type CreateDetailedInput = Partial<Omit<DetailedRow, "id">> & {
+  id?: number;
+};
+export type UpdateDetailedInput = Partial<Omit<DetailedRow, "id">>;
 
 /** صف خفيف لقوائم الاختيار (بدون انضمامات ثقيلة) */
 export type DetailedBriefRow = {
@@ -174,4 +178,49 @@ export async function getById(
     throw new Error("لا يمكن الحصول على بيانات الحساب التفصيلي");
   }
   return data as unknown as DetailedWithRelations;
+}
+
+export async function createDetailed(
+  input: CreateDetailedInput,
+): Promise<DetailedWithRelations> {
+  const payload = { ...input };
+  delete payload.id;
+  const { data, error } = await supabase
+    .from("detailed")
+    .insert(payload)
+    .select(selectDetailedEmbed)
+    .single();
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن إضافة الحساب التفصيلي");
+  }
+  return data as unknown as DetailedWithRelations;
+}
+
+export async function updateDetailed(
+  id: number | string,
+  patch: UpdateDetailedInput,
+): Promise<DetailedWithRelations> {
+  const rowId = parseNumericId(id, "رقم الحساب التفصيلي");
+  const { data, error } = await supabase
+    .from("detailed")
+    .update(patch)
+    .eq("id", rowId)
+    .select(selectDetailedEmbed)
+    .single();
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن تعديل الحساب التفصيلي");
+  }
+  return data as unknown as DetailedWithRelations;
+}
+
+export async function deleteDetailed(id: number | string): Promise<unknown> {
+  const rowId = parseNumericId(id, "رقم الحساب التفصيلي");
+  const { data, error } = await supabase.from("detailed").delete().eq("id", rowId);
+  if (error) {
+    console.error(error);
+    throw new Error("لا يمكن حذف الحساب التفصيلي");
+  }
+  return data;
 }

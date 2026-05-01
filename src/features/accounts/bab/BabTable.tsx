@@ -1,13 +1,19 @@
-import { type ReactNode } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { type BabWithRelations } from "../../../api/apiBab";
+import { useSessionPermissions } from "../../permissions/useSessionPermissions";
 import {
   DataTable,
   type DataTableColumn,
 } from "../../../components/ui/data-table";
 import { TableStatusBadge } from "../../../components/ui/TableStatusBadge";
 import { formatOptionalText, stringValue } from "../../../lib/displayValue";
+import { downloadExcelXls, printRtlTable } from "../../../lib/tableExport";
 import { useFetchBab } from "./useBab";
+import { useCreateBab, useDeleteBab, useUpdateBab } from "./useBab";
+import { BabFormDialog } from "./BabFormDialog";
+import { DeleteBabConfirmDialog } from "./DeleteBabConfirmDialog";
 
 // function embedName<T extends { id: number }>(
 //   embed: T | T[] | null | undefined,
@@ -18,7 +24,7 @@ import { useFetchBab } from "./useBab";
 //   return pick(embed);
 // }
 
-const columns: DataTableColumn<BabWithRelations>[] = [
+const BASE_COLUMNS: DataTableColumn<BabWithRelations>[] = [
   {
     id: "name",
     header: "إسم الباب",
@@ -112,10 +118,32 @@ const columns: DataTableColumn<BabWithRelations>[] = [
   },
 ];
 
+const EXPORT_HEADERS = ["اسم الباب", "الكود", "له موازنة", "له برامج", "الحالة"] as const;
+
+function rowExportCells(row: BabWithRelations): string[] {
+  return [
+    formatOptionalText(row.bab_name),
+    formatOptionalText(row.bab_code),
+    row.havebudget ? "نعم" : "لا",
+    row.haveprograms ? "نعم" : "لا",
+    row.status ? "مفعل" : "غير مفعل",
+  ];
+}
+
 function Toolbar({
   generalAccountId,
+  rows,
+  canCreate,
+  canPrint,
+  canExport,
+  onAdd,
 }: {
   generalAccountId: string;
+  rows: BabWithRelations[];
+  canCreate: boolean;
+  canPrint: boolean;
+  canExport: boolean;
+  onAdd: () => void;
 }): ReactNode {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -131,6 +159,48 @@ function Toolbar({
       >
         تصنيف الحسابات
       </Link>
+      <div className="flex items-center gap-2">
+        {canCreate ? (
+          <button type="button" className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-100" onClick={onAdd}>
+            <Plus className="size-4" />
+            إضافة
+          </button>
+        ) : null}
+        {canPrint ? (
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            disabled={rows.length === 0}
+            onClick={() =>
+              printRtlTable({
+                documentTitle: "طباعة الأبواب",
+                caption: "جدول الأبواب",
+                headers: ["#", ...EXPORT_HEADERS],
+                rows: rows.map((r, i) => [String(i + 1), ...rowExportCells(r)]),
+              })
+            }
+          >
+            طباعة
+          </button>
+        ) : null}
+        {canExport ? (
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            disabled={rows.length === 0}
+            onClick={() =>
+              downloadExcelXls({
+                filename: "bab.xls",
+                sheetName: "bab",
+                headers: [...EXPORT_HEADERS],
+                rows: rows.map((r) => rowExportCells(r)),
+              })
+            }
+          >
+            تصدير XLS
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -139,7 +209,36 @@ export default function BabTable() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { isLoading, data, error, isError } = useFetchBab();
+  const createMutation = useCreateBab();
+  const updateMutation = useUpdateBab();
+  const deleteMutation = useDeleteBab();
+  const { codeSet } = useSessionPermissions();
   const rows = data ?? [];
+  const canCreate = codeSet.has("table.bab.create");
+  const canEdit = codeSet.has("table.bab.update");
+  const canDelete = codeSet.has("table.bab.delete");
+  const canPrint = codeSet.has("table.bab.print");
+  const canExport = codeSet.has("table.bab.export");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<BabWithRelations | null>(null);
+  const [deletingRow, setDeletingRow] = useState<BabWithRelations | null>(null);
+  const columns = useMemo(() => {
+    const actionColumn: DataTableColumn<BabWithRelations> = {
+      id: "actions",
+      header: "الإجراءات",
+      className: "w-[112px] min-w-[112px]",
+      thClassName: "text-center",
+      contentAlign: "center",
+      cell: (row) => (
+        <div className="flex items-center justify-center gap-1">
+          {canEdit ? <button type="button" className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100 hover:text-slate-900" onClick={(e) => { e.stopPropagation(); setEditingRow(row); }}><Pencil className="size-4" /></button> : null}
+          {canDelete ? <button type="button" className="rounded-md p-1.5 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={(e) => { e.stopPropagation(); setDeletingRow(row); }}><Trash2 className="size-4" /></button> : null}
+        </div>
+      ),
+      getSortValue: () => "",
+    };
+    return canEdit || canDelete ? [actionColumn, ...BASE_COLUMNS] : BASE_COLUMNS;
+  }, [canEdit, canDelete]);
 
   if (id == null || id === "") {
     return (
@@ -180,7 +279,16 @@ export default function BabTable() {
         getRowId={(row) => row.id}
         showIndex
         indexHeader="#"
-        toolbar={<Toolbar generalAccountId={id} />}
+        toolbar={
+          <Toolbar
+            generalAccountId={id}
+            rows={rows}
+            canCreate={canCreate}
+            canPrint={canPrint}
+            canExport={canExport}
+            onAdd={() => setIsCreateOpen(true)}
+          />
+        }
         caption={`الأبواب (الحساب العام ${id})`}
         density="comfortable"
         minTableWidth="100%"
@@ -193,6 +301,39 @@ export default function BabTable() {
           navigate(`/settings/band/${row.id}${q}`);
         }}
         rowClassName={() => "cursor-pointer"}
+      />
+      <BabFormDialog
+        open={isCreateOpen}
+        mode="create"
+        initial={null}
+        parentIds={{
+          generalAccountId: id ? Number(id) : null,
+          accountTypeId: rows[0]?.account_type_id ?? null,
+        }}
+        isSubmitting={createMutation.isPending}
+        onClose={() => setIsCreateOpen(false)}
+        onCreate={(input) => createMutation.mutate(input, { onSuccess: () => setIsCreateOpen(false) })}
+        onUpdate={() => undefined}
+      />
+      <BabFormDialog
+        open={editingRow != null}
+        mode="edit"
+        initial={editingRow}
+        parentIds={{
+          generalAccountId: id ? Number(id) : null,
+          accountTypeId: rows[0]?.account_type_id ?? null,
+        }}
+        isSubmitting={updateMutation.isPending}
+        onClose={() => setEditingRow(null)}
+        onCreate={() => undefined}
+        onUpdate={(payload) => updateMutation.mutate(payload, { onSuccess: () => setEditingRow(null) })}
+      />
+      <DeleteBabConfirmDialog
+        open={deletingRow != null}
+        row={deletingRow}
+        isSubmitting={deleteMutation.isPending}
+        onClose={() => setDeletingRow(null)}
+        onConfirm={(rowId) => deleteMutation.mutate(rowId, { onSuccess: () => setDeletingRow(null) })}
       />
     </div>
   );

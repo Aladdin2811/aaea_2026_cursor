@@ -1,7 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
+  createGeneralAccount,
+  deleteGeneralAccount,
   getAll,
   getAllNoId,
+  type UpdateGeneralAccountInput,
+  updateGeneralAccount,
   type GeneralAccountWithType,
 } from "../../../api/apiGeneralAccount";
 import { useParams } from "react-router-dom";
@@ -40,4 +45,46 @@ export function useGeneralAccountSelect(accountTypeId: number | string | undefin
   });
 
   return { isLoading, data, error, isError };
+}
+
+export function useCreateGeneralAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createGeneralAccount,
+    onSuccess: () => {
+      toast.success("تمت إضافة الحساب العام بنجاح");
+      void qc.invalidateQueries({ queryKey: ["general_account"] });
+    },
+    onError: (err: Error) => toast.error(err?.message || "تعذرت إضافة الحساب العام"),
+  });
+}
+
+export function useUpdateGeneralAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      patch,
+    }: {
+      id: number;
+      patch: UpdateGeneralAccountInput;
+    }) => updateGeneralAccount(id, patch),
+    onSuccess: () => {
+      toast.success("تم تعديل الحساب العام بنجاح");
+      void qc.invalidateQueries({ queryKey: ["general_account"] });
+    },
+    onError: (err: Error) => toast.error(err?.message || "تعذر تعديل الحساب العام"),
+  });
+}
+
+export function useDeleteGeneralAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteGeneralAccount(id),
+    onSuccess: () => {
+      toast.success("تم حذف الحساب العام بنجاح");
+      void qc.invalidateQueries({ queryKey: ["general_account"] });
+    },
+    onError: (err: Error) => toast.error(err?.message || "تعذر حذف الحساب العام"),
+  });
 }
