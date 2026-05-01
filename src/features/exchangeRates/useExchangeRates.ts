@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
+  captureStbAchatNow,
   createCurrencyRate,
+  type CreateExchangeRatePayload,
   getAll,
   getCurrencyRateByDay,
   getCurrencyRateByYear,
@@ -10,9 +12,13 @@ import {
   type ExchangeRatesRow,
 } from "../../api/apiExchangeRates";
 
+const exchangeRatesKey = "exchange_rates" as const;
+const exchangeRatesByDayKey = "exchange_rates_by_day" as const;
+const lastExchangeRatesKey = "last_exchange_rates" as const;
+
 export function useFetchExchangeRates() {
   const { isLoading, data, error, isError } = useQuery<ExchangeRatesRow[]>({
-    queryKey: ["all_exchange_rates"],
+    queryKey: [exchangeRatesKey, "all"],
     queryFn: () => getAll(),
     retry: false,
   });
@@ -22,7 +28,7 @@ export function useFetchExchangeRates() {
 
 export function useFetchExchangeRatesByYear(yearId: number | null) {
   const { isLoading, data, error, isError } = useQuery<ExchangeRatesRow[]>({
-    queryKey: ["exchange_rates", yearId],
+    queryKey: [exchangeRatesKey, "by_year", yearId],
     queryFn: () => getCurrencyRateByYear(yearId as number),
     enabled:
       yearId != null && Number.isFinite(yearId) && yearId > 0,
@@ -34,7 +40,7 @@ export function useFetchExchangeRatesByYear(yearId: number | null) {
 
 export function useExchangeRatesByDay(day: string | null) {
   const { isLoading, data, error, isError } = useQuery<ExchangeRateBriefRow[]>({
-    queryKey: ["exchange_rates_by_day", day],
+    queryKey: [exchangeRatesByDayKey, day],
     queryFn: () => getCurrencyRateByDay(day as string),
     enabled: !!day?.trim(),
     retry: false,
@@ -45,7 +51,7 @@ export function useExchangeRatesByDay(day: string | null) {
 
 export function useLastExchangeRate() {
   const { isLoading, data, error, isError } = useQuery<ExchangeRateBriefRow[]>({
-    queryKey: ["last_exchange_rates"],
+    queryKey: [lastExchangeRatesKey],
     queryFn: getLastCurrencyRate,
     retry: false,
   });
@@ -58,16 +64,79 @@ export function useCreateExchangeRate() {
 
   const { mutate: createExchangeRate, isPending: isCreating } = useMutation({
     mutationFn: createCurrencyRate,
+    onMutate: async (payload: CreateExchangeRatePayload) => {
+      const previousAll = queryClient.getQueryData<ExchangeRatesRow[]>([
+        exchangeRatesKey,
+        "all",
+      ]);
+      const previousLast = queryClient.getQueryData<ExchangeRateBriefRow[]>([
+        lastExchangeRatesKey,
+      ]);
+      const previousByDay = queryClient.getQueryData<ExchangeRateBriefRow[]>([
+        exchangeRatesByDayKey,
+        payload.exchange_rate_day,
+      ]);
+
+      const optimistic: ExchangeRateBriefRow = {
+        id: -Date.now(),
+        exchange_rate_day: payload.exchange_rate_day,
+        usd: payload.usd,
+        eur: payload.eur,
+        year: new Date(payload.exchange_rate_day).getFullYear(),
+      };
+
+      queryClient.setQueryData<ExchangeRatesRow[]>(
+        [exchangeRatesKey, "all"],
+        (old) => [optimistic, ...(old ?? [])],
+      );
+      queryClient.setQueryData<ExchangeRateBriefRow[]>(
+        [lastExchangeRatesKey],
+        [optimistic],
+      );
+      queryClient.setQueryData<ExchangeRateBriefRow[]>(
+        [exchangeRatesByDayKey, payload.exchange_rate_day],
+        [optimistic],
+      );
+
+      return { previousAll, previousLast, previousByDay, payload };
+    },
     onSuccess: () => {
       toast.success("تم تسجيل أسعار الصرف الجديدة بنجاح");
-      void queryClient.invalidateQueries({ queryKey: ["exchange_rates"] });
-      void queryClient.invalidateQueries({ queryKey: ["all_exchange_rates"] });
-      void queryClient.invalidateQueries({ queryKey: ["last_exchange_rates"] });
-      void queryClient.invalidateQueries({ queryKey: ["exchange_rates_by_day"] });
+      void queryClient.invalidateQueries({ queryKey: [exchangeRatesKey] });
+      void queryClient.invalidateQueries({ queryKey: [lastExchangeRatesKey] });
+      void queryClient.invalidateQueries({ queryKey: [exchangeRatesByDayKey] });
     },
-    onError: (err: Error) => {
+    onError: (err: Error, _vars, ctx) => {
+      queryClient.setQueryData([exchangeRatesKey, "all"], ctx?.previousAll);
+      queryClient.setQueryData([lastExchangeRatesKey], ctx?.previousLast);
+      if (ctx?.payload?.exchange_rate_day) {
+        queryClient.setQueryData(
+          [exchangeRatesByDayKey, ctx.payload.exchange_rate_day],
+          ctx.previousByDay,
+        );
+      }
       toast.error(err?.message || "حدث خطأ");
     },
   });
   return { isCreating, createExchangeRate };
+}
+
+export function useCaptureStbAchatNow() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: captureStbAchatNow,
+    onSuccess: (result) => {
+      if (result.status === "inserted") {
+        toast.success("تم جلب سعر الصرف اليومي بنجاح");
+      } else {
+        toast.info(result.message || "تم تنفيذ الجلب اليدوي");
+      }
+      void queryClient.invalidateQueries({ queryKey: [exchangeRatesKey] });
+      void queryClient.invalidateQueries({ queryKey: [lastExchangeRatesKey] });
+      void queryClient.invalidateQueries({ queryKey: [exchangeRatesByDayKey] });
+    },
+    onError: (err: Error) => {
+      toast.error(err?.message || "تعذّر تشغيل الجلب اليدوي");
+    },
+  });
 }

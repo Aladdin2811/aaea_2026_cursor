@@ -1,5 +1,5 @@
 import { ChevronDown, X } from "lucide-react";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { ENABLE_PATH_PERMISSION_CHECK } from "../../config/accessPolicy";
 import { useSessionPermissions } from "../../features/permissions/useSessionPermissions";
@@ -25,25 +25,29 @@ export function AppSidebar({ open, onClose, desktopVisible = true }: Props) {
     return filterNavGroupsForPermissions(navGroups, codeSet);
   }, [codeSet, permissionsLoading]);
 
-  const [openGroupId, setOpenGroupId] = useState<string | null>(() => {
-    const pathname =
-      typeof window !== "undefined" ? window.location.pathname : "/";
-    const active = navGroups.find((g) => groupHasActiveChild(pathname, g));
-    return active?.id ?? null;
+  const [manualOpenGroupId, setManualOpenGroupId] = useState<string | null>(
+    null,
+  );
+  const [manualPathname, setManualPathname] = useState<string>(() => {
+    return typeof window !== "undefined" ? window.location.pathname : "/";
   });
 
-  /** عند تغيير المسار: يبقى قسم الصفحة الحالية وحده مفتوحاً */
-  useEffect(() => {
-    const pathname = location.pathname;
+  const activeGroupId = useMemo(() => {
+    const pathname =
+      typeof window !== "undefined" ? location.pathname : "/";
     const active = visibleNavGroups.find((g) =>
       groupHasActiveChild(pathname, g),
     );
-    if (active) setOpenGroupId(active.id);
+    return active?.id ?? null;
   }, [location.pathname, visibleNavGroups]);
+
+  const openGroupId =
+    manualPathname === location.pathname ? manualOpenGroupId : activeGroupId;
 
   /** قسم واحد مفتوح؛ الضغط على نفس الرأس يغلقه، والضغط على آخر يفتحه ويغلق السابق */
   function toggleGroup(id: string) {
-    setOpenGroupId((prev) => (prev === id ? null : id));
+    setManualPathname(location.pathname);
+    setManualOpenGroupId((prev) => (prev === id ? null : id));
   }
 
   const mobileSlide = open
@@ -121,7 +125,7 @@ export function AppSidebar({ open, onClose, desktopVisible = true }: Props) {
                       "flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-start transition-colors",
                       groupActive
                         ? "bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 text-white shadow-[0_1px_0_0_rgba(0,0,0,0.12)] shadow-emerald-900/20"
-                        : "bg-olive-300/50 text-slate-800 hover:bg-slate-50/90",
+                        : "bg-olive-100/60 font-bold text-slate-800 hover:bg-slate-50/90",
                     ].join(" ")}
                   >
                     <span
@@ -167,7 +171,7 @@ export function AppSidebar({ open, onClose, desktopVisible = true }: Props) {
                                   "relative block rounded-md py-1.5 ps-5 pe-2 text-[length:var(--sidebar-child-label-size)] font-normal leading-snug transition-colors",
                                   "before:absolute before:inset-y-1.5 before:start-1.5 before:w-0.5 before:rounded-full before:bg-emerald-600 before:transition-opacity",
                                   isActive
-                                    ? "bg-emerald-400/50 font-bold text-black before:opacity-100"
+                                    ? "bg-emerald-100 font-bold text-black before:opacity-100"
                                     : "text-slate-600 before:opacity-0 hover:bg-slate-50 hover:text-slate-900",
                                 ].join(" ")
                               }

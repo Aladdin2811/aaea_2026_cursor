@@ -1,5 +1,8 @@
-import { useMemo, useState, type ReactNode } from "react";
-import type { BudgetsWithRelations } from "../../../../api/apiBudgets";
+import { useMemo, useRef, useState, type ReactNode } from "react";
+import type {
+  BudgetsWithRelations,
+  ImportBudgetsAddOnlyRow,
+} from "../../../../api/apiBudgets";
 import {
   DataTable,
   type DataTableColumn,
@@ -8,6 +11,7 @@ import { useBudgetBab } from "../../../accounts/bab/useBab";
 import { useFetchCurrentYear } from "../../../years/currentYear/useCurrentYear";
 import { useFetchActivYears } from "../../../years/year/useYears";
 import { useFetchBudgets } from "./useBudgets";
+import { useImportBudgetsAddOnly } from "./useBudgets";
 import { downloadUtf8Csv, printRtlTable } from "../../../../lib/tableExport";
 import {
   firstRelation,
@@ -20,6 +24,65 @@ import Select, {
   type SingleValue,
   type StylesConfig,
 } from "react-select";
+import { useSessionPermissions } from "../../../permissions/useSessionPermissions";
+import { toast } from "sonner";
+
+function toNullableNumber(value: string | undefined): number | null {
+  if (value == null) return null;
+  const v = value.trim();
+  if (v === "") return null;
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
+  return n;
+}
+
+function parseBudgetsCsv(text: string): ImportBudgetsAddOnlyRow[] {
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+  if (lines.length < 2) {
+    throw new Error("ملف CSV لا يحتوي بيانات كافية.");
+  }
+
+  const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+  const idx = (name: string) => headers.indexOf(name);
+  const yearIdx = idx("year_id");
+  const accountIdx = idx("account_id");
+  if (yearIdx < 0 || accountIdx < 0) {
+    throw new Error("يجب أن يحتوي CSV على الأعمدة: year_id, account_id");
+  }
+
+  const rows: ImportBudgetsAddOnlyRow[] = [];
+  for (let i = 1; i < lines.length; i += 1) {
+    const cols = lines[i].split(",").map((c) => c.trim());
+    const year = toNullableNumber(cols[yearIdx]);
+    const account = toNullableNumber(cols[accountIdx]);
+    if (year == null || account == null) {
+      throw new Error(
+        `فشل قراءة CSV: الصف ${i + 1} يجب أن يحتوي year_id و account_id صالحين`,
+      );
+    }
+    rows.push({
+      year_id: year,
+      account_id: account,
+      account_type_id: toNullableNumber(cols[idx("account_type_id")]) ?? null,
+      general_account_id:
+        toNullableNumber(cols[idx("general_account_id")]) ?? null,
+      bab_id: toNullableNumber(cols[idx("bab_id")]) ?? null,
+      band_id: toNullableNumber(cols[idx("band_id")]) ?? null,
+      no3_id: toNullableNumber(cols[idx("no3_id")]) ?? null,
+      detailed_id: toNullableNumber(cols[idx("detailed_id")]) ?? null,
+      budget_amount: toNullableNumber(cols[idx("budget_amount")]) ?? null,
+      funding_type_id: toNullableNumber(cols[idx("funding_type_id")]) ?? null,
+      main_topic_id: toNullableNumber(cols[idx("main_topic_id")]) ?? null,
+    });
+  }
+  if (rows.length === 0) {
+    throw new Error("لا توجد صفوف صالحة للاستيراد.");
+  }
+  return rows;
+}
 
 const BUDGETS_EXPORT_HEADERS = [
   "البند",
@@ -126,6 +189,9 @@ function Toolbar({
   selectedBabId,
   onYearChange,
   onBabChange,
+  canImport,
+  onImportClick,
+  isImporting,
 }: {
   rows: BudgetsWithRelations[];
   n: number;
@@ -133,6 +199,9 @@ function Toolbar({
   selectedBabId: number | null;
   onYearChange: (id: number | null) => void;
   onBabChange: (id: number | null) => void;
+  canImport: boolean;
+  onImportClick: () => void;
+  isImporting: boolean;
 }): ReactNode {
   const { isLoading, data } = useFetchActivYears();
   const years = data ?? [];
@@ -208,6 +277,16 @@ function Toolbar({
       </p>
 
       <div className="flex items-center gap-2">
+        {canImport ? (
+          <button
+            type="button"
+            className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={onImportClick}
+            disabled={isImporting}
+          >
+            {isImporting ? "جاري الاستيراد..." : "استيراد CSV"}
+          </button>
+        ) : null}
         <button
           type="button"
           className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
@@ -232,6 +311,10 @@ function Toolbar({
 }
 
 export default function BudgetsTable() {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { codeSet } = useSessionPermissions();
+  const canImport = codeSet.has("table.budgets.import");
+  const importMutation = useImportBudgetsAddOnly();
   const [selectedYearId, setSelectedYearId] = useState<number | null>(null);
   const [selectedBabId, setSelectedBabId] = useState<number | null>(null);
   const { data: currentYearData } = useFetchCurrentYear();
@@ -278,6 +361,29 @@ export default function BudgetsTable() {
 
   return (
     <div className="space-y-2" dir="rtl">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv,text/csv"
+        className="hidden"
+        onChange={async (e) => {
+          try {
+            const file = e.target.files?.[0];
+            e.currentTarget.value = "";
+            if (!file) return;
+            const text = await file.text();
+            const parsedRows = parseBudgetsCsv(text);
+            if (parsedRows.length === 0) {
+              throw new Error("لا توجد صفوف صالحة للاستيراد.");
+            }
+            importMutation.mutate(parsedRows);
+          } catch (err) {
+            toast.error(
+              err instanceof Error ? err.message : "تعذّر قراءة ملف CSV",
+            );
+          }
+        }}
+      />
       <DataTable<BudgetsWithRelations>
         data={rows}
         columns={columns}
@@ -299,6 +405,9 @@ export default function BudgetsTable() {
             selectedBabId={selectedBabId}
             onYearChange={setSelectedYearId}
             onBabChange={setSelectedBabId}
+            canImport={canImport}
+            onImportClick={() => fileInputRef.current?.click()}
+            isImporting={importMutation.isPending}
           />
         }
         footer={

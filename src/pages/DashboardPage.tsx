@@ -76,6 +76,58 @@ const SelfResourcesStats = [
   },
 ];
 
+const expenses = [
+  {
+    label: "الباب الأول\n( نفقات الأفراد العاملين )",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: TrendingUp,
+    // tone: "from-emerald-500/90 to-teal-600",
+  },
+  {
+    label: "الباب الثاني\n( مصروفات سفر وتنقلات )",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: TrendingDown,
+    // tone: "from-slate-700 to-slate-900",
+  },
+  {
+    label: "الباب الثالث\n( المستلزمات الخدمية )",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: FileSpreadsheet,
+    // tone: "from-amber-500 to-orange-600",
+  },
+  {
+    label: "الباب الرابع\n( المستلزمات السلعية والصيانة )",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: FileSpreadsheet,
+    // tone: "from-amber-500 to-orange-600",
+  },
+  {
+    label: "الباب الخامس\n( المصروفات الرأسمالية )",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: FileSpreadsheet,
+    // tone: "from-amber-500 to-orange-600",
+  },
+  {
+    label: "الباب السادس\n( نفقات اجتماعات المجالس الرئيسية )",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: FileSpreadsheet,
+    // tone: "from-amber-500 to-orange-600",
+  },
+  {
+    label: "الباب السابع\n( الأنشطة والبرامج )",
+    value: "—",
+    // hint: "سنربطها بالبيانات لاحقاً",
+    // icon: FileSpreadsheet,
+    // tone: "from-amber-500 to-orange-600",
+  },
+];
+
 export function DashboardPage() {
   return (
     <div className="space-y-8">
@@ -105,53 +157,99 @@ export function DashboardPage() {
           </Link> */}
         </div>
       </section>
+      <div className="space-y-1">
+        <span className="block min-w-0 underline text-lg font-bold text-slate-900">
+          مساهمات الدول الأعضاء
+        </span>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {contributionsStats.map(({ label, value, hint, icon: Icon, tone }) => (
-          <article
-            key={label}
-            className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/40 transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <div
-              className={`mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md ${tone}`}
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {contributionsStats.map(
+            ({ label, value, hint, icon: Icon, tone }) => (
+              <article
+                key={label}
+                className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/40 transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div
+                  className={`mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md ${tone}`}
+                >
+                  <Icon className="size-5" strokeWidth={1.75} />
+                </div>
+                <p className="text-sm font-medium text-slate-500">{label}</p>
+                <p className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
+                  {value}
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                  {hint}
+                </p>
+              </article>
+            ),
+          )}
+        </section>
+      </div>
+      <hr className="my-6 h-0.5 w-full shrink-0 border-0 bg-emerald-200" />
+      <div className="space-y-1">
+        <span className="block min-w-0 underline text-lg font-bold text-slate-900">
+          إيرادات الموارد الذاتية
+        </span>
+
+        <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+          {SelfResourcesStats.map(({ label, value }) => (
+            <article
+              key={label}
+              className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm shadow-slate-200/40 transition hover:-translate-y-0.5 hover:shadow-md sm:p-3.5"
             >
-              <Icon className="size-5" strokeWidth={1.75} />
-            </div>
-            <p className="text-sm font-medium text-slate-500">{label}</p>
-            <p className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
-              {value}
-            </p>
-            <p className="mt-2 text-xs leading-relaxed text-slate-500">
-              {hint}
-            </p>
-          </article>
-        ))}
-      </section>
-
-      <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
-        {SelfResourcesStats.map(({ label, value }) => (
-          <article
-            key={label}
-            className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm shadow-slate-200/40 transition hover:-translate-y-0.5 hover:shadow-md sm:p-3.5"
-          >
-            {/* <div
+              {/* <div
               className={`mb-2 inline-flex size-8 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-md sm:size-9 ${tone}`}
             >
               <Icon className="size-4" strokeWidth={1.75} />
             </div> */}
-            <p className="text-[0.7rem] font-medium leading-snug text-slate-500 sm:text-xs">
-              {label}
-            </p>
-            <p className="mt-0.5 text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-              {value}
-            </p>
-            {/* <p className="mt-1 text-[0.65rem] leading-relaxed text-slate-500 sm:text-xs">
+              <p className="text-[0.7rem] font-medium leading-snug text-slate-500 sm:text-xs">
+                {label}
+              </p>
+              <p className="mt-0.5 text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
+                {value}
+              </p>
+              {/* <p className="mt-1 text-[0.65rem] leading-relaxed text-slate-500 sm:text-xs">
               {hint}
             </p> */}
-          </article>
-        ))}
-      </section>
+            </article>
+          ))}
+        </section>
+      </div>
 
+      <hr className="my-6 h-0.5 w-full shrink-0 border-0 bg-emerald-200" />
+
+      <div className="space-y-1">
+        <span className="block min-w-0 underline text-lg font-bold text-slate-900">
+          الإعنماد والمصروفات
+        </span>
+
+        <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+          {expenses.map(({ label, value }) => (
+            <article
+              key={label}
+              className="group relative overflow-hidden rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm shadow-slate-200/40 transition hover:-translate-y-0.5 hover:shadow-md sm:p-3.5"
+            >
+              {/* <div
+              className={`mb-2 inline-flex size-8 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-md sm:size-9 ${tone}`}
+            >
+              <Icon className="size-4" strokeWidth={1.75} />
+            </div> */}
+              <p className="text-[0.7rem] font-medium leading-snug whitespace-pre-line text-slate-500 sm:text-xs">
+                {label}
+              </p>
+              <p className="mt-0.5 text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
+                {value}
+              </p>
+              {/* <p className="mt-1 text-[0.65rem] leading-relaxed text-slate-500 sm:text-xs">
+              {hint}
+            </p> */}
+            </article>
+          ))}
+        </section>
+
+        <hr className="my-6 h-0.5 w-full shrink-0 border-0 bg-emerald-200" />
+      </div>
       <section className="grid gap-4 lg:grid-cols-5">
         <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm lg:col-span-3">
           <div className="flex items-center justify-between gap-3">

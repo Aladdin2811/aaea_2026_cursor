@@ -16,6 +16,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+scripts/windows/stb-rates-secrets.ps1
 
 # Editor directories and files
 .vscode/*

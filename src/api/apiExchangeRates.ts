@@ -187,6 +187,11 @@ export type UpdateExchangeRatePayload = Partial<
   Pick<ExchangeRatesRow, "exchange_rate_day" | "usd" | "eur" | "year">
 >;
 
+export type ExchangeRateCaptureResult = {
+  status: string;
+  message: string;
+};
+
 export async function updateExchangeRate(
   id: number | string,
   patch: UpdateExchangeRatePayload,
@@ -220,4 +225,21 @@ export async function deleteExchangeRate(id: number | string): Promise<unknown> 
     throw new Error("حدث خطأ عند حذف سعر الصرف");
   }
   return data;
+}
+
+export async function captureStbAchatNow(): Promise<ExchangeRateCaptureResult> {
+  const { data, error } = await supabase.functions.invoke("fetch-stb-achat", {
+    body: { attempt_no: 1 },
+  });
+  if (error) {
+    console.error(error);
+    throw new Error(
+      "تعذّر تنفيذ الجلب اليدوي. تأكد من نشر Edge Function: fetch-stb-achat",
+    );
+  }
+  const first = data as ExchangeRateCaptureResult | null;
+  return {
+    status: first?.status ?? "unknown",
+    message: first?.message ?? "تم التنفيذ",
+  };
 }

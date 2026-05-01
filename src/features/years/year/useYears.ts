@@ -50,13 +50,38 @@ export function useUpdateYear() {
       updatedData: UpdateYearsInput;
       id: number | string;
     }) => updateYearAPI(id, updatedData),
+    onMutate: async ({ id, updatedData }) => {
+      const rowId = Number(id);
+      const keys = [["years"], ["activ_years"], ["activ_years2"]] as const;
+
+      const previous = keys.map((key) => ({
+        key,
+        data: queryClient.getQueryData<YearsRow[]>(key),
+      }));
+
+      for (const { key } of previous) {
+        queryClient.setQueryData<YearsRow[]>(key, (old) => {
+          if (!old) return old;
+          return old.map((row) =>
+            row.id === rowId ? { ...row, ...updatedData } : row,
+          );
+        });
+      }
+
+      return { previous };
+    },
     onSuccess: () => {
       toast.success("تم تعديل بيانات السنة بنجاح");
       void queryClient.invalidateQueries({ queryKey: ["years"] });
       void queryClient.invalidateQueries({ queryKey: ["activ_years"] });
       void queryClient.invalidateQueries({ queryKey: ["activ_years2"] });
     },
-    onError: (err: Error) => {
+    onError: (err: Error, _vars, ctx) => {
+      if (ctx?.previous) {
+        for (const item of ctx.previous) {
+          queryClient.setQueryData(item.key, item.data);
+        }
+      }
       toast.error(err?.message ?? "حدث خطأ");
     },
   });

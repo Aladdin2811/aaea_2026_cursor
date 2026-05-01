@@ -8,7 +8,11 @@ import {
 } from "../../features/roles/useRolePermissionsAdmin";
 
 export default function RolesPage() {
-  const { data: roles, isLoading: rolesLoading, isError: rolesError } = useFetchRoles();
+  const {
+    data: roles,
+    isLoading: rolesLoading,
+    isError: rolesError,
+  } = useFetchRoles();
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
 
   const selectedRole = useMemo(
@@ -16,10 +20,16 @@ export default function RolesPage() {
     [roles, selectedRoleId],
   );
 
-  const { data: permissions, isLoading: permissionsLoading, isError: permissionsError } =
-    usePermissionsCatalog();
-  const { data: rolePermissions, isLoading: rolePermsLoading, isError: rolePermsError } =
-    useRolePermissions(selectedRoleId);
+  const {
+    data: permissions,
+    isLoading: permissionsLoading,
+    isError: permissionsError,
+  } = usePermissionsCatalog();
+  const {
+    data: rolePermissions,
+    isLoading: rolePermsLoading,
+    isError: rolePermsError,
+  } = useRolePermissions(selectedRoleId);
   const [search, setSearch] = useState("");
   const { mutate: togglePermission, isPending: isUpdating } =
     useToggleRolePermission(selectedRoleId);
@@ -52,7 +62,9 @@ export default function RolesPage() {
       prev.push(perm);
       groups.set(group, prev);
     }
-    return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    return Array.from(groups.entries()).sort((a, b) =>
+      a[0].localeCompare(b[0]),
+    );
   }, [filteredPermissions]);
 
   const canMutate = !(isUpdating || isBulkUpdating);
@@ -61,7 +73,9 @@ export default function RolesPage() {
     <div className="grid gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]" dir="rtl">
       <section className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
         <h2 className="mb-2 text-sm font-semibold text-slate-900">الأدوار</h2>
-        {rolesLoading ? <p className="text-sm text-slate-600">جاري تحميل الأدوار…</p> : null}
+        {rolesLoading ? (
+          <p className="text-sm text-slate-600">جاري تحميل الأدوار…</p>
+        ) : null}
         {rolesError ? (
           <p className="text-sm text-destructive">تعذّر تحميل الأدوار.</p>
         ) : null}
@@ -75,12 +89,16 @@ export default function RolesPage() {
                 onClick={() => setSelectedRoleId(role.id)}
                 className={`w-full rounded-lg border px-3 py-2 text-right text-sm transition ${
                   selected
-                    ? "border-emerald-400 bg-emerald-50 text-emerald-900"
+                    ? "border-emerald-400 bg-emerald-100 text-emerald-900"
                     : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
                 }`}
               >
-                <div className="font-medium">{role.role_name ?? `دور #${role.id}`}</div>
-                <div className="mt-0.5 text-xs text-slate-500">{role.description ?? "—"}</div>
+                <div className="font-medium">
+                  {role.role_name ?? `دور #${role.id}`}
+                </div>
+                <div className="mt-0.5 text-xs text-slate-500">
+                  {role.description ?? "—"}
+                </div>
               </button>
             );
           })}
@@ -90,7 +108,9 @@ export default function RolesPage() {
       <section className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold text-slate-900">
-            {selectedRole ? `صلاحيات الدور: ${selectedRole.role_name ?? selectedRole.id}` : "صلاحيات الدور"}
+            {selectedRole
+              ? `صلاحيات الدور: ${selectedRole.role_name ?? selectedRole.id}`
+              : "صلاحيات الدور"}
           </h2>
           <span className="text-xs text-slate-500">
             {isUpdating || isBulkUpdating ? "جاري الحفظ…" : "التحديث مباشر"}
@@ -107,7 +127,11 @@ export default function RolesPage() {
           <button
             type="button"
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            disabled={!canMutate || selectedRoleId == null || filteredPermissions.length === 0}
+            disabled={
+              !canMutate ||
+              selectedRoleId == null ||
+              filteredPermissions.length === 0
+            }
             onClick={() =>
               bulkSet({
                 permissionIds: filteredPermissions.map((p) => p.id),
@@ -120,7 +144,11 @@ export default function RolesPage() {
           <button
             type="button"
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            disabled={!canMutate || selectedRoleId == null || filteredPermissions.length === 0}
+            disabled={
+              !canMutate ||
+              selectedRoleId == null ||
+              filteredPermissions.length === 0
+            }
             onClick={() =>
               bulkSet({
                 permissionIds: filteredPermissions.map((p) => p.id),
@@ -133,7 +161,9 @@ export default function RolesPage() {
         </div>
 
         {selectedRoleId == null ? (
-          <p className="text-sm text-slate-600">اختر دورًا من القائمة لبدء إدارة الصلاحيات.</p>
+          <p className="text-sm text-slate-600">
+            اختر دورًا من القائمة لبدء إدارة الصلاحيات.
+          </p>
         ) : null}
         {permissionsLoading || rolePermsLoading ? (
           <p className="text-sm text-slate-600">جاري تحميل الصلاحيات…</p>
@@ -147,23 +177,35 @@ export default function RolesPage() {
             <table className="w-full min-w-[40rem] border-collapse text-sm">
               <thead className="sticky top-0 z-10 bg-slate-100 text-slate-700">
                 <tr>
-                  <th className="border-b border-slate-200 px-3 py-2 text-right">الكود</th>
-                  <th className="border-b border-slate-200 px-3 py-2 text-right">الوصف</th>
-                  <th className="border-b border-slate-200 px-3 py-2 text-center">مفعلة</th>
+                  <th className="border-b border-slate-200 px-3 py-2 text-right">
+                    الكود
+                  </th>
+                  <th className="border-b border-slate-200 px-3 py-2 text-right">
+                    الوصف
+                  </th>
+                  <th className="border-b border-slate-200 px-3 py-2 text-center">
+                    مفعلة
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {groupedPermissions.map(([group, rows]) => (
                   <Fragment key={`g-${group}`}>
                     <tr key={`h-${group}`} className="bg-slate-100/80">
-                      <td colSpan={3} className="border-b border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700">
+                      <td
+                        colSpan={3}
+                        className="border-b border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                      >
                         {group}
                       </td>
                     </tr>
                     {rows.map((perm) => {
                       const active = activeByPermissionId.get(perm.id) ?? false;
                       return (
-                        <tr key={perm.id} className="odd:bg-white even:bg-slate-50/50">
+                        <tr
+                          key={perm.id}
+                          className="odd:bg-white even:bg-slate-50/50"
+                        >
                           <td className="border-b border-slate-100 px-3 py-2 font-mono text-xs text-slate-800">
                             {perm.code}
                           </td>

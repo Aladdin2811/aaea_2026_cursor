@@ -84,6 +84,25 @@ export type BudgetsListFilters = {
   main_topic_id?: number | string;
 };
 
+export type ImportBudgetsAddOnlyRow = {
+  account_type_id?: number | null;
+  general_account_id?: number | null;
+  bab_id?: number | null;
+  band_id?: number | null;
+  no3_id?: number | null;
+  detailed_id?: number | null;
+  year_id: number;
+  budget_amount?: number | null;
+  funding_type_id?: number | null;
+  account_id: number;
+  main_topic_id?: number | null;
+};
+
+export type ImportBudgetsAddOnlyResult = {
+  inserted_count: number;
+  skipped_count: number;
+};
+
 const tableName = "budgets" as const;
 
 const selectBudgetsEmbed = `
@@ -252,4 +271,23 @@ export async function deleteBudgets(id: number | string): Promise<unknown> {
     throw new Error("حدث خطأ عند حذف الموازنة");
   }
   return data;
+}
+
+export async function importBudgetsAddOnly(
+  rows: ImportBudgetsAddOnlyRow[],
+): Promise<ImportBudgetsAddOnlyResult> {
+  const { data, error } = await supabase.rpc("import_budgets_add_only", {
+    p_rows: rows,
+  });
+
+  if (error) {
+    console.error(error);
+    throw new Error(error.message || "تعذّر استيراد الإعتمادات المدرجة");
+  }
+
+  const first = (data as ImportBudgetsAddOnlyResult[] | null)?.[0];
+  return {
+    inserted_count: Number(first?.inserted_count ?? 0),
+    skipped_count: Number(first?.skipped_count ?? 0),
+  };
 }
