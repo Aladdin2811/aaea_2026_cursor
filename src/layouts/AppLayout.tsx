@@ -1,5 +1,7 @@
 import { Outlet } from 'react-router-dom'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
+import { PathPermissionGuard } from '../components/auth/PathPermissionGuard'
+import { RouteOutletFallback } from '../components/errors/RouteOutletFallback'
 import { AppHeader } from '../components/layout/AppHeader'
 import { AppSidebar } from '../components/layout/AppSidebar'
 
@@ -25,7 +27,11 @@ export function AppLayout() {
         />
         <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pt-3 pb-6 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-full">
-            <Outlet />
+            <Suspense fallback={<RouteOutletFallback />}>
+              <PathPermissionGuard>
+                <Outlet />
+              </PathPermissionGuard>
+            </Suspense>
           </div>
         </main>
       </div>

@@ -1,6 +1,9 @@
 import { ChevronDown, X } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { ENABLE_PATH_PERMISSION_CHECK } from "../../config/accessPolicy";
+import { useSessionPermissions } from "../../features/permissions/useSessionPermissions";
+import { filterNavGroupsForPermissions } from "../../navigation/filterNavForPermissions";
 import { groupHasActiveChild, navGroups } from "../../navigation/mainNav";
 
 type Props = {
@@ -13,6 +16,15 @@ type Props = {
 export function AppSidebar({ open, onClose, desktopVisible = true }: Props) {
   const location = useLocation();
   const baseId = useId();
+  const { codeSet, isLoading: permissionsLoading } = useSessionPermissions();
+
+  const visibleNavGroups = useMemo(() => {
+    if (!ENABLE_PATH_PERMISSION_CHECK || permissionsLoading) {
+      return [...navGroups];
+    }
+    return filterNavGroupsForPermissions(navGroups, codeSet);
+  }, [codeSet, permissionsLoading]);
+
   const [openGroupId, setOpenGroupId] = useState<string | null>(() => {
     const pathname =
       typeof window !== "undefined" ? window.location.pathname : "/";
@@ -23,9 +35,11 @@ export function AppSidebar({ open, onClose, desktopVisible = true }: Props) {
   /** عند تغيير المسار: يبقى قسم الصفحة الحالية وحده مفتوحاً */
   useEffect(() => {
     const pathname = location.pathname;
-    const active = navGroups.find((g) => groupHasActiveChild(pathname, g));
+    const active = visibleNavGroups.find((g) =>
+      groupHasActiveChild(pathname, g),
+    );
     if (active) setOpenGroupId(active.id);
-  }, [location.pathname]);
+  }, [location.pathname, visibleNavGroups]);
 
   /** قسم واحد مفتوح؛ الضغط على نفس الرأس يغلقه، والضغط على آخر يفتحه ويغلق السابق */
   function toggleGroup(id: string) {
@@ -86,7 +100,7 @@ export function AppSidebar({ open, onClose, desktopVisible = true }: Props) {
             className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overflow-x-hidden overscroll-y-contain p-2"
             aria-label="القائمة الرئيسية"
           >
-            {navGroups.map((group) => {
+            {visibleNavGroups.map((group) => {
               const Icon = group.icon;
               const expanded = openGroupId === group.id;
               const groupActive = groupHasActiveChild(location.pathname, group);

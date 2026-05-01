@@ -164,7 +164,7 @@ export const navGroups: NavGroup[] = [
         to: "/administrative_management/basic_salaries",
         label: "الرواتب الأساسية",
       },
-      { to: "/administrative_management/allowancesPage", label: "البدلات" },
+      { to: "/administrative_management/AllowancesPage", label: "البدلات" },
       { to: "/administrative_management/employees", label: "الموظفين" },
       {
         to: "/administrative_management/employees_banks",
@@ -204,17 +204,17 @@ export const navGroups: NavGroup[] = [
   //==========================================================================
 
   {
-    id: "end_of_servic",
+    id: "end_of_service",
     label: "ص نهاية الخدمة",
     icon: Banknote,
     children: [
       {
-        to: "/end_of_servic/end_of_service_employee_contribution",
+        to: "/end_of_service/end_of_service_employee_contribution",
         label: "نسبة مساهمة الموظفين",
         end: true,
       },
       {
-        to: "/end_of_servic/end_of_service_contractors_contribution",
+        to: "/end_of_service/end_of_service_contractors_contribution",
         label: "نسبة مساهمة المتعاقدين",
       },
     ],

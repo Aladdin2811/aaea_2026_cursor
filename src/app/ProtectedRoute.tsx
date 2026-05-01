@@ -1,8 +1,10 @@
 import { useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useUser } from "../features/authentication/useUser";
 import { Spinner } from "../components/ui/Spinner";
 import { useInactivitySessionCountdown } from "../features/authentication/useInactivitySessionCountdown";
+import { supabase } from "../lib/supabase";
 
 type ProtectedRouteProps = {
   children: ReactNode;
@@ -21,12 +23,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     enabled: isAuthenticated,
     timeoutMs: sessionTimeoutMs,
     onExpire: () => {
-      // حساب الوقت من مكوّن الـHeader قد يكون في نفس الوقت، لكن تسجيل الخروج يجب أن يحدث
-      // لضمان عدم بقاء المستخدم داخل الصفحات.
       void (async () => {
-        // Lazy import to avoid circular deps and keep this file small
-        const { supabase } = await import("../lib/supabase");
-        const { toast } = await import("sonner");
         await supabase.auth.signOut();
         toast.info("انتهت الجلسة بسبب عدم النشاط");
         navigate("/login", { replace: true });
