@@ -4,12 +4,56 @@ import {
   createBand,
   deleteBand,
   getAll,
+  getBandSum,
   getForSelect,
   type BandWithRelations,
   type UpdateBandInput,
   updateBand,
 } from "../../../api/apiBand";
 import { useParams } from "react-router-dom";
+
+function toFiniteYearId(
+  yearId: number | string | null | undefined,
+): number | null {
+  if (yearId == null || yearId === "") return null;
+  const n = typeof yearId === "string" ? Number(yearId) : yearId;
+  return Number.isFinite(n) ? n : null;
+}
+
+function toFiniteBandId(
+  bandId: number | string | null | undefined,
+): number | null {
+  if (bandId == null || bandId === "") return null;
+  const n = typeof bandId === "string" ? Number(bandId) : bandId;
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/**
+ * نتيجة دالة `get_band_sum` في Supabase (رقم واحد).
+ * `year_id` = مفتاح السنة في جدول `years`؛ `band_id` = مفتاح البند في جدول `band`.
+ *
+ * @example useFetchBandSum(activeYearId, 82)
+ */
+export function useFetchBandSum(
+  yearId: number | string | null | undefined,
+  bandId: number | string | null | undefined,
+) {
+  const y = toFiniteYearId(yearId);
+  const b = toFiniteBandId(bandId);
+  const enabled = y != null && b != null;
+
+  return useQuery<number, Error>({
+    queryKey: ["band", "get_band_sum", y, b],
+    queryFn: async () => {
+      if (y == null || b == null) {
+        throw new Error("year_id و band_id مطلوبان");
+      }
+      return getBandSum({ year_id: y, band_id: b });
+    },
+    enabled,
+    retry: false,
+  });
+}
 
 export function useFetchBand() {
   const { id } = useParams();

@@ -291,3 +291,76 @@ export async function importBudgetsAddOnly(
     skipped_count: Number(first?.skipped_count ?? 0),
   };
 }
+
+function parseRpcNumericResult(data: unknown): number {
+  if (data == null) return 0;
+  if (typeof data === "number" && Number.isFinite(data)) return data;
+  if (typeof data === "string") {
+    const n = Number(data);
+    return Number.isFinite(n) ? n : 0;
+  }
+  if (Array.isArray(data) && data.length > 0) {
+    return parseRpcNumericResult(data[0]);
+  }
+  if (typeof data === "object" && data !== null && !Array.isArray(data)) {
+    const o = data as Record<string, unknown>;
+    const keys = Object.keys(o);
+    if (keys.length === 1 && keys[0]) {
+      return parseRpcNumericResult(o[keys[0]!]);
+    }
+    for (const k of [
+      "get_bab_budget",
+      "get_bab_expenses_sum",
+      "budget",
+      "sum",
+      "total",
+    ]) {
+      if (k in o) return parseRpcNumericResult(o[k]);
+    }
+    const v = Object.values(o).find(
+      (x) => typeof x === "number" || typeof x === "string",
+    );
+    if (v !== undefined) return parseRpcNumericResult(v);
+  }
+  return 0;
+}
+
+/** يُمرَّر إلى الدالة كـ `p_year_id` و `p_bab_id` في Postgres. */
+export type GetBabBudgetRpcArgs = {
+  year_id: number;
+  bab_id: number;
+};
+
+/**
+ * استدعاء دالة Postgres `get_bab_budget(p_year_id, p_bab_id)` عبر PostgREST.
+ */
+export async function getBabBudget(
+  rpcArgs: GetBabBudgetRpcArgs,
+): Promise<number> {
+  const { data, error } = await supabase.rpc("get_bab_budget", {
+    p_year_id: rpcArgs.year_id,
+    p_bab_id: rpcArgs.bab_id,
+  });
+  if (error) {
+    console.error("Supabase get_bab_budget:", error);
+    throw new Error(error.message || "تعذر جلب موازنة الباب");
+  }
+  return parseRpcNumericResult(data);
+}
+
+/**
+ * استدعاء دالة Postgres `get_bab_expenses_sum(p_year_id, p_bab_id)` عبر PostgREST.
+ */
+export async function getBabExpensesSum(
+  rpcArgs: GetBabBudgetRpcArgs,
+): Promise<number> {
+  const { data, error } = await supabase.rpc("get_bab_expenses_sum", {
+    p_year_id: rpcArgs.year_id,
+    p_bab_id: rpcArgs.bab_id,
+  });
+  if (error) {
+    console.error("Supabase get_bab_expenses_sum:", error);
+    throw new Error(error.message || "تعذر جلب مجموع مصروفات الباب");
+  }
+  return parseRpcNumericResult(data);
+}

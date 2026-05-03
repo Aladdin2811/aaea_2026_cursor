@@ -36,6 +36,7 @@ export const navGroups: NavGroup[] = [
     icon: LayoutDashboard,
     children: [
       { to: "/", label: "الرئيسية", end: true },
+      { to: "/dashboard/financial", label: "المؤشرات المالية" },
       { to: "/dashboard/summary", label: "ملخص ومؤشرات" },
     ],
   },

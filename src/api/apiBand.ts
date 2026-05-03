@@ -356,3 +356,54 @@ export async function getBandProjectsContributions(
 
   return Object.values(grouped);
 }
+
+function parseRpcNumericResult(data: unknown): number {
+  if (data == null) return 0;
+  if (typeof data === "number" && Number.isFinite(data)) return data;
+  if (typeof data === "string") {
+    const n = Number(data);
+    return Number.isFinite(n) ? n : 0;
+  }
+  if (Array.isArray(data) && data.length > 0) {
+    return parseRpcNumericResult(data[0]);
+  }
+  if (typeof data === "object" && data !== null && !Array.isArray(data)) {
+    const o = data as Record<string, unknown>;
+    const keys = Object.keys(o);
+    if (keys.length === 1 && keys[0]) {
+      return parseRpcNumericResult(o[keys[0]!]);
+    }
+    for (const k of ["get_band_sum", "sum", "total", "band_sum"]) {
+      if (k in o) return parseRpcNumericResult(o[k]);
+    }
+    const v = Object.values(o).find(
+      (x) => typeof x === "number" || typeof x === "string",
+    );
+    if (v !== undefined) return parseRpcNumericResult(v);
+  }
+  return 0;
+}
+
+/** يُمرَّر إلى الدالة كـ `p_year_id` و `p_band_id` في Postgres. */
+export type GetBandSumRpcArgs = {
+  year_id: number;
+  band_id: number;
+};
+
+/**
+ * استدعاء دالة Postgres `get_band_sum(p_year_id, p_band_id)` عبر PostgREST.
+ * نوع TypeScript يبقى `year_id` / `band_id` للوضوح في الواجهة.
+ */
+export async function getBandSum(
+  rpcArgs: GetBandSumRpcArgs,
+): Promise<number> {
+  const { data, error } = await supabase.rpc("get_band_sum", {
+    p_year_id: rpcArgs.year_id,
+    p_band_id: rpcArgs.band_id,
+  });
+  if (error) {
+    console.error("Supabase get_band_sum:", error);
+    throw new Error(error.message || "تعذر جلب مجموع البند");
+  }
+  return parseRpcNumericResult(data);
+}

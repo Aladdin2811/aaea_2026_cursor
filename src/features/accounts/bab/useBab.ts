@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { getBabExpensesSum } from "../../../api/apiBudgets";
 import {
   createBab,
   deleteBab,
@@ -11,6 +12,47 @@ import {
   type BabWithRelations,
 } from "../../../api/apiBab";
 import { useParams } from "react-router-dom";
+
+function toFiniteYearId(
+  yearId: number | string | null | undefined,
+): number | null {
+  if (yearId == null || yearId === "") return null;
+  const n = typeof yearId === "string" ? Number(yearId) : yearId;
+  return Number.isFinite(n) ? n : null;
+}
+
+function toFiniteBabId(
+  babId: number | string | null | undefined,
+): number | null {
+  if (babId == null || babId === "") return null;
+  const n = typeof babId === "string" ? Number(babId) : babId;
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/**
+ * نتيجة دالة `get_bab_expenses_sum` في Supabase (رقم واحد).
+ * `year_id` و `bab_id` كما في `get_bab_budget`.
+ */
+export function useFetchBabExpensesSum(
+  yearId: number | string | null | undefined,
+  babId: number | string | null | undefined,
+) {
+  const y = toFiniteYearId(yearId);
+  const b = toFiniteBabId(babId);
+  const enabled = y != null && b != null;
+
+  return useQuery<number, Error>({
+    queryKey: ["bab", "get_bab_expenses_sum", y, b],
+    queryFn: async () => {
+      if (y == null || b == null) {
+        throw new Error("year_id و bab_id مطلوبان");
+      }
+      return getBabExpensesSum({ year_id: y, bab_id: b });
+    },
+    enabled,
+    retry: false,
+  });
+}
 
 export function useFetchBab() {
   const { id } = useParams();

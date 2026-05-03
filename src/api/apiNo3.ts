@@ -232,3 +232,53 @@ export async function getActiveWithProgramsFlag(): Promise<No3BriefRow[]> {
   }
   return (data as unknown as No3BriefRow[] | null) ?? [];
 }
+
+function parseRpcNumericResult(data: unknown): number {
+  if (data == null) return 0;
+  if (typeof data === "number" && Number.isFinite(data)) return data;
+  if (typeof data === "string") {
+    const n = Number(data);
+    return Number.isFinite(n) ? n : 0;
+  }
+  if (Array.isArray(data) && data.length > 0) {
+    return parseRpcNumericResult(data[0]);
+  }
+  if (typeof data === "object" && data !== null && !Array.isArray(data)) {
+    const o = data as Record<string, unknown>;
+    const keys = Object.keys(o);
+    if (keys.length === 1 && keys[0]) {
+      return parseRpcNumericResult(o[keys[0]!]);
+    }
+    for (const k of ["get_no3_sum", "sum", "total", "no3_sum"]) {
+      if (k in o) return parseRpcNumericResult(o[k]);
+    }
+    const v = Object.values(o).find(
+      (x) => typeof x === "number" || typeof x === "string",
+    );
+    if (v !== undefined) return parseRpcNumericResult(v);
+  }
+  return 0;
+}
+
+/** يُمرَّر إلى الدالة كـ `p_year_id` و `p_no3_id` في Postgres. */
+export type GetNo3SumRpcArgs = {
+  year_id: number;
+  no3_id: number;
+};
+
+/**
+ * استدعاء دالة Postgres `get_no3_sum(p_year_id, p_no3_id)` عبر PostgREST.
+ */
+export async function getNo3Sum(
+  rpcArgs: GetNo3SumRpcArgs,
+): Promise<number> {
+  const { data, error } = await supabase.rpc("get_no3_sum", {
+    p_year_id: rpcArgs.year_id,
+    p_no3_id: rpcArgs.no3_id,
+  });
+  if (error) {
+    console.error("Supabase get_no3_sum:", error);
+    throw new Error(error.message || "تعذر جلب مجموع النوع");
+  }
+  return parseRpcNumericResult(data);
+}

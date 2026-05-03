@@ -3,6 +3,10 @@ import type { RouteObject } from "react-router-dom";
 import { lazyNamed } from "../lazyRoute";
 import { ph } from "./ph";
 
+const HomePage = lazyNamed(
+  () => import("../../pages/HomePage"),
+  "HomePage",
+);
 const DashboardPage = lazyNamed(
   () => import("../../pages/DashboardPage"),
   "DashboardPage",
@@ -10,7 +14,8 @@ const DashboardPage = lazyNamed(
 const Test = lazy(() => import("../../pages/Test.tsx"));
 
 export const dashboardRoutes: RouteObject[] = [
-  { index: true, element: <DashboardPage /> },
+  { index: true, element: <HomePage /> },
+  { path: "dashboard/financial", element: <DashboardPage /> },
   { path: "test", element: <Test /> },
   {
     path: "dashboard/summary",
