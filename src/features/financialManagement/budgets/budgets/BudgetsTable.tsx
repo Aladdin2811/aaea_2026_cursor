@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import type {
-  BudgetsWithRelations,
   ImportBudgetsAddOnlyRow,
+  ModifiedBudgetRow,
 } from "../../../../api/apiBudgets";
 import {
   DataTable,
@@ -12,9 +12,8 @@ import { useFetchCurrentYear } from "../../../years/currentYear/useCurrentYear";
 import { useFetchActivYears } from "../../../years/year/useYears";
 import { useFetchBudgets } from "./useBudgets";
 import { useImportBudgetsAddOnly } from "./useBudgets";
-import { downloadUtf8Csv, printRtlTable } from "../../../../lib/tableExport";
+import { downloadXlsxFromMatrix, printRtlTable } from "../../../../lib/tableExport";
 import {
-  firstRelation,
   formatNumeric,
   textOrDash,
   toNumberOrNull,
@@ -85,74 +84,137 @@ function parseBudgetsCsv(text: string): ImportBudgetsAddOnlyRow[] {
 }
 
 const BUDGETS_EXPORT_HEADERS = [
+  "رمز الحساب",
   "البند",
   "النوع",
   "الحساب التفصيلي",
-  "الإعتماد",
+  "الإعتماد المدرج",
+  "منقول إليه",
+  "منقول منه",
+  "ترفيع الإعتمادات",
+  "الإعتماد المعدل",
 ] as const;
 
-function exportBudgetsToExcelCsv(rows: BudgetsWithRelations[]): void {
-  downloadUtf8Csv(
-    "budgets.csv",
-    [...BUDGETS_EXPORT_HEADERS],
-    rows.map((row) => [
-      textOrDash(firstRelation(row.band)?.band_name),
-      textOrDash(firstRelation(row.no3)?.no3_name),
-      textOrDash(firstRelation(row.detailed)?.detailed_name),
+function exportBudgetsToXlsx(rows: ModifiedBudgetRow[]): void {
+  downloadXlsxFromMatrix({
+    filename: "budgets.xlsx",
+    sheetName: "الإعتمادات المعدّلة",
+    headers: [...BUDGETS_EXPORT_HEADERS],
+    rows: rows.map((row) => [
+      textOrDash(row.code),
+      textOrDash(row.band_name),
+      textOrDash(row.no3_name),
+      textOrDash(row.detailed_name),
       formatNumeric(row.budget_amount),
-    ]),
-  );
-}
-
-function printBudgetsTable(rows: BudgetsWithRelations[]): void {
-  printRtlTable({
-    documentTitle: "طباعة الإعتمادات المدرجة",
-    caption: "جدول الإعتمادات المدرجة",
-    headers: ["#", ...BUDGETS_EXPORT_HEADERS],
-    rows: rows.map((row, idx) => [
-      String(idx + 1),
-      textOrDash(firstRelation(row.band)?.band_name),
-      textOrDash(firstRelation(row.no3)?.no3_name),
-      textOrDash(firstRelation(row.detailed)?.detailed_name),
-      formatNumeric(row.budget_amount),
+      formatNumeric(row.transfer_to),
+      formatNumeric(row.transfer_from),
+      formatNumeric(row.increase_budget),
+      formatNumeric(row.modified_budget),
     ]),
   });
 }
 
-const columns: DataTableColumn<BudgetsWithRelations>[] = [
+function printBudgetsTable(rows: ModifiedBudgetRow[]): void {
+  printRtlTable({
+    documentTitle: "طباعة الإعتمادات المدرجة",
+    caption: "جدول الإعتمادات المعدّلة",
+    headers: ["#", ...BUDGETS_EXPORT_HEADERS],
+    rows: rows.map((row, idx) => [
+      String(idx + 1),
+      textOrDash(row.code),
+      textOrDash(row.band_name),
+      textOrDash(row.no3_name),
+      textOrDash(row.detailed_name),
+      formatNumeric(row.budget_amount),
+      formatNumeric(row.transfer_to),
+      formatNumeric(row.transfer_from),
+      formatNumeric(row.increase_budget),
+      formatNumeric(row.modified_budget),
+    ]),
+  });
+}
+
+/**
+ * عرض الأعمدة: `minWidth` صغير لترك الجدول (`table-auto`) يوسّع العمود حسب المحتوى،
+ * و`maxWidth` سقفاً — عند الوصول إليه يلتف النص إلى السطر التالي (مع `break-words` في الخلية).
+ * عدّل `maxWidth` (واختيارياً `minWidth`) هنا للتحكم.
+ */
+const BUDGETS_COLUMN_WIDTHS: Record<
+  string,
+  { minWidth?: string; maxWidth?: string; width?: string }
+> = {
+  code: { minWidth: "9rem", maxWidth: "12rem" },
+  band_name: { minWidth: "5rem", maxWidth: "14rem" },
+  no3_name: { minWidth: "4rem", maxWidth: "12rem" },
+  detailed_name: { minWidth: "6rem", maxWidth: "24rem" },
+  budget_amount: { minWidth: "6rem", maxWidth: "6rem" },
+  transfer_to: { minWidth: "6rem", maxWidth: "6rem" },
+  transfer_from: { minWidth: "6rem", maxWidth: "6rem" },
+  increase_budget: { minWidth: "6rem", maxWidth: "7rem" },
+  modified_budget: { minWidth: "6rem", maxWidth: "6rem" },
+};
+
+const textWrapTd = "align-top align-text-top";
+const textWrapCell =
+  "block w-full min-w-0 whitespace-normal break-words text-pretty leading-snug";
+
+const columns: DataTableColumn<ModifiedBudgetRow>[] = [
   {
-    id: "band",
+    id: "code",
+    ...BUDGETS_COLUMN_WIDTHS.code,
+    header: "رمز الحساب",
+    tdClassName: textWrapTd,
+    cell: (row) => (
+      <span
+        className={`${textWrapCell} break-all font-mono text-xs text-slate-800`}
+        dir="ltr"
+      >
+        {textOrDash(row.code)}
+      </span>
+    ),
+    getSortValue: (row) => row.code ?? "",
+  },
+  {
+    id: "band_name",
+    ...BUDGETS_COLUMN_WIDTHS.band_name,
     header: "البند",
+    tdClassName: textWrapTd,
     cell: (row) => (
-      <span className="text-slate-800">
-        {firstRelation(row.band)?.band_name ?? "—"}
+      <span className={`${textWrapCell} text-slate-800`}>
+        {textOrDash(row.band_name)}
       </span>
     ),
-    getSortValue: (row) => firstRelation(row.band)?.band_name ?? "",
+    getSortValue: (row) => row.band_name ?? "",
   },
   {
-    id: "no3",
+    id: "no3_name",
+    ...BUDGETS_COLUMN_WIDTHS.no3_name,
     header: "النوع",
+    tdClassName: textWrapTd,
     cell: (row) => (
-      <span className="text-slate-700">
-        {firstRelation(row.no3)?.no3_name ?? "—"}
+      <span className={`${textWrapCell} text-slate-700`}>
+        {textOrDash(row.no3_name)}
       </span>
     ),
-    getSortValue: (row) => firstRelation(row.no3)?.no3_name ?? "",
+    getSortValue: (row) => row.no3_name ?? "",
   },
   {
-    id: "detailed",
+    id: "detailed_name",
+    ...BUDGETS_COLUMN_WIDTHS.detailed_name,
     header: "الحساب التفصيلي",
+    tdClassName: textWrapTd,
     cell: (row) => (
-      <span className="font-medium text-slate-900">
-        {firstRelation(row.detailed)?.detailed_name ?? "—"}
+      <span className={`${textWrapCell} font-medium text-slate-900`}>
+        {textOrDash(row.detailed_name)}
       </span>
     ),
-    getSortValue: (row) => firstRelation(row.detailed)?.detailed_name ?? "",
+    getSortValue: (row) => row.detailed_name ?? "",
   },
   {
     id: "budget_amount",
-    header: "الإعتماد",
+    ...BUDGETS_COLUMN_WIDTHS.budget_amount,
+    header: "الإعتماد المدرج",
+    tdClassName: "whitespace-nowrap",
     cell: (row) => (
       <span
         className="block w-full text-right tabular-nums font-semibold text-slate-900"
@@ -164,15 +226,80 @@ const columns: DataTableColumn<BudgetsWithRelations>[] = [
     getSortValue: (row) => toNumberOrNull(row.budget_amount) ?? -Infinity,
     contentAlign: "start",
   },
+  {
+    id: "transfer_to",
+    ...BUDGETS_COLUMN_WIDTHS.transfer_to,
+    header: "منقول إليه",
+    tdClassName: "whitespace-nowrap",
+    cell: (row) => (
+      <span
+        className="block w-full text-right tabular-nums text-slate-800"
+        dir="ltr"
+      >
+        {formatNumeric(row.transfer_to)}
+      </span>
+    ),
+    getSortValue: (row) => toNumberOrNull(row.transfer_to) ?? -Infinity,
+    contentAlign: "start",
+  },
+  {
+    id: "transfer_from",
+    ...BUDGETS_COLUMN_WIDTHS.transfer_from,
+    header: "منقول منه",
+    tdClassName: "whitespace-nowrap",
+    cell: (row) => (
+      <span
+        className="block w-full text-right tabular-nums text-slate-800"
+        dir="ltr"
+      >
+        {formatNumeric(row.transfer_from)}
+      </span>
+    ),
+    getSortValue: (row) => toNumberOrNull(row.transfer_from) ?? -Infinity,
+    contentAlign: "start",
+  },
+  {
+    id: "increase_budget",
+    ...BUDGETS_COLUMN_WIDTHS.increase_budget,
+    header: "ترفيع الإعتمادات",
+    tdClassName: "whitespace-nowrap",
+    cell: (row) => (
+      <span
+        className="block w-full text-right tabular-nums text-slate-800"
+        dir="ltr"
+      >
+        {formatNumeric(row.increase_budget)}
+      </span>
+    ),
+    getSortValue: (row) => toNumberOrNull(row.increase_budget) ?? -Infinity,
+    contentAlign: "start",
+  },
+  {
+    id: "modified_budget",
+    ...BUDGETS_COLUMN_WIDTHS.modified_budget,
+    header: "الإعتماد المعدل",
+    tdClassName: "whitespace-nowrap",
+    cell: (row) => (
+      <span
+        className="block w-full text-right tabular-nums font-semibold text-emerald-900"
+        dir="ltr"
+      >
+        {formatNumeric(row.modified_budget)}
+      </span>
+    ),
+    getSortValue: (row) => toNumberOrNull(row.modified_budget) ?? -Infinity,
+    contentAlign: "start",
+  },
 ];
 
 type BabOption = { value: number; label: string };
 
 const babSelectStyles: StylesConfig<BabOption, false, GroupBase<BabOption>> = {
-  container: (base) => ({ ...base, minWidth: "16rem" }),
+  container: (base) => ({ ...base, minWidth: "22rem" }),
   control: (base, state) => ({
     ...base,
     minHeight: 38,
+    minWidth: "23rem",
     borderRadius: 8,
     borderColor: state.isFocused ? "#94a3b8" : "#cbd5e1",
     boxShadow: state.isFocused ? "0 0 0 1px #94a3b8" : "none",
@@ -193,7 +320,7 @@ function Toolbar({
   onImportClick,
   isImporting,
 }: {
-  rows: BudgetsWithRelations[];
+  rows: ModifiedBudgetRow[];
   n: number;
   selectedYearId: number | null;
   selectedBabId: number | null;
@@ -300,7 +427,7 @@ function Toolbar({
           type="button"
           className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="تصدير جدول الإعتمادات المدرجة إلى ملف Excel"
-          onClick={() => exportBudgetsToExcelCsv(rows)}
+          onClick={() => exportBudgetsToXlsx(rows)}
           disabled={rows.length === 0}
         >
           تصدير Excel
@@ -319,7 +446,7 @@ export default function BudgetsTable() {
   const [selectedBabId, setSelectedBabId] = useState<number | null>(null);
   const { data: currentYearData } = useFetchCurrentYear();
   const { data: babData } = useBudgetBab();
-  const effectiveYearId = selectedYearId ?? (currentYearData?.year_id ?? null);
+  const effectiveYearId = selectedYearId ?? currentYearData?.year_id ?? null;
 
   const filters = useMemo(
     () =>
@@ -333,10 +460,10 @@ export default function BudgetsTable() {
     enabled: readyToFetch,
   });
   const rows = useMemo(() => data ?? [], [data]);
-  const totalBudgetByBab = useMemo(
+  const totalModifiedBudget = useMemo(
     () =>
       rows.reduce((sum, row) => {
-        const n = toNumberOrNull(row.budget_amount);
+        const n = toNumberOrNull(row.modified_budget);
         return sum + (n ?? 0);
       }, 0),
     [rows],
@@ -354,7 +481,7 @@ export default function BudgetsTable() {
       <p dir="rtl" className="text-destructive" role="alert">
         {error instanceof Error
           ? error.message
-          : "حدث خطأ أثناء تحميل بيانات الإعتمادات المدرجة"}
+          : "حدث خطأ أثناء تحميل بيانات الإعتمادات المعدّلة"}
       </p>
     );
   }
@@ -384,17 +511,17 @@ export default function BudgetsTable() {
           }
         }}
       />
-      <DataTable<BudgetsWithRelations>
+      <DataTable<ModifiedBudgetRow>
         data={rows}
         columns={columns}
         isLoading={isLoading}
-        loadingMessage="جاري تحميل بيانات الإعتمادات المدرجة…"
+        loadingMessage="جاري تحميل بيانات الإعتمادات المعدّلة…"
         emptyMessage={
           !readyToFetch
-            ? "اختر السنة والباب أولاً لعرض بيانات الإعتمادات المدرجة."
+            ? "اختر السنة والباب أولاً لعرض بيانات الإعتمادات المعدّلة."
             : "لا توجد بيانات إعتمادات للعرض."
         }
-        getRowId={(row) => row.id}
+        getRowId={(_row, index) => index}
         showIndex
         indexHeader="#"
         toolbar={
@@ -412,10 +539,10 @@ export default function BudgetsTable() {
         }
         footer={
           <div className="flex items-center justify-end">
-            <p className="text-sm font-semibold text-slate-800">
-              إجمالي إعتمادات الباب: {selectedBabName} —{" "}
+            <p className="text-sm font-semibold text-emerald-900">
+              إجمالي الإعتماد المعدل — {selectedBabName}:{" "}
               <span className="tabular-nums" dir="ltr">
-                {totalBudgetByBab.toLocaleString("en-US", {
+                {totalModifiedBudget.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
@@ -423,7 +550,7 @@ export default function BudgetsTable() {
             </p>
           </div>
         }
-        caption="جدول الإعتمادات المدرجة"
+        caption="جدول الإعتمادات المعدّلة"
         density="comfortable"
         minTableWidth="100%"
         maxHeight="70dvh"

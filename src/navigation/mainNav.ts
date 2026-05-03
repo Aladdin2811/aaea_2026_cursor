@@ -29,6 +29,7 @@ export type NavGroup = {
   children: NavChild[];
 };
 
+/** روابط القائمة: بعد تغيير `to` شغّل `npm run check:nav`؛ للمسارات المحمية راجع `routePermissionRules.ts`. */
 export const navGroups: NavGroup[] = [
   {
     id: "dashboard",

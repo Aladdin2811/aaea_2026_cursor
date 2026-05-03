@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  getAll,
   getBabBudget,
+  getModifiedBudgets,
   importBudgetsAddOnly,
   type ImportBudgetsAddOnlyRow,
   type BudgetsListFilters,
-  type BudgetsWithRelations,
+  type ModifiedBudgetRow,
 } from "../../../../api/apiBudgets";
 
 function toFiniteYearId(
@@ -52,15 +52,48 @@ export function useFetchBabBudget(
   });
 }
 
+/**
+ * جدول الإعتمادات المعدّلة عبر RPC `get_modified_budgets(p_year_id, p_bab_id)`.
+ * يتطلّب `year_id` و`bab_id` في المرشّحات.
+ */
 export function useFetchBudgets(
   filters?: BudgetsListFilters,
   options?: { enabled?: boolean },
 ) {
-  const { isLoading, data, error, isError } = useQuery<BudgetsWithRelations[]>({
-    queryKey: ["budgets", filters ?? {}],
-    queryFn: () => getAll(filters),
+  const hasYearAndBab =
+    filters?.year_id != null &&
+    filters?.bab_id != null &&
+    filters.year_id !== "" &&
+    filters.bab_id !== "";
+
+  const enabled = (options?.enabled ?? true) && hasYearAndBab;
+
+  const { isLoading, data, error, isError } = useQuery<ModifiedBudgetRow[]>({
+    queryKey: ["budgets", "modified", filters ?? {}],
+    queryFn: async () => {
+      if (
+        filters?.year_id == null ||
+        filters?.bab_id == null ||
+        filters.year_id === "" ||
+        filters.bab_id === ""
+      ) {
+        throw new Error("year_id و bab_id مطلوبان لجلب الإعتمادات المعدّلة");
+      }
+      const y =
+        typeof filters.year_id === "string"
+          ? Number(filters.year_id)
+          : filters.year_id;
+      const b =
+        typeof filters.bab_id === "string"
+          ? Number(filters.bab_id)
+          : filters.bab_id;
+      if (!Number.isFinite(y) || !Number.isFinite(b)) {
+        throw new Error("معرّف السنة أو الباب غير صالح");
+      }
+      return getModifiedBudgets({ year_id: y, bab_id: b });
+    },
     retry: false,
-    enabled: options?.enabled ?? true,
+    enabled,
     staleTime: 0,
   });
 

@@ -1,4 +1,32 @@
+import { utils, writeFile } from "xlsx";
 import { escapeHtml } from "./tableUtils";
+
+/** أسماء أوراق Excel: حتى 31 حرفاً، وبدون : \ / ? * [ ] */
+function sanitizeExcelSheetName(name: string): string {
+  const cleaned = name.replace(/[:\\/?*[\]]/g, " ").trim().slice(0, 31);
+  return cleaned.length > 0 ? cleaned : "Sheet1";
+}
+
+/**
+ * تنزيل ملف **.xlsx** (تنسيق Excel الحقيقي) من صف رؤوس + صفوف نصية.
+ * الأرقام المنسّقة كنص تبقى نصاً في الخلية (مناسب للعربية والأرقام المعروضة).
+ */
+export function downloadXlsxFromMatrix(options: {
+  filename: string;
+  sheetName: string;
+  headers: string[];
+  rows: string[][];
+}): void {
+  const { filename, sheetName, headers, rows } = options;
+  const aoa: string[][] = [headers, ...rows];
+  const ws = utils.aoa_to_sheet(aoa);
+  const wb = utils.book_new();
+  utils.book_append_sheet(wb, ws, sanitizeExcelSheetName(sheetName));
+  const out = /\.xlsx$/i.test(filename)
+    ? filename
+    : `${filename.replace(/\.(csv|xls|xlsx)$/i, "")}.xlsx`;
+  writeFile(wb, out);
+}
 
 /** تنزيل CSV بترميز UTF-8 مع BOM ليفتح بشكل صحيح في Excel. */
 export function downloadUtf8Csv(

@@ -4,7 +4,7 @@ import {
   DataTable,
   type DataTableColumn,
 } from "../../../../components/ui/data-table";
-import { downloadUtf8Csv, printRtlTable } from "../../../../lib/tableExport";
+import { downloadXlsxFromMatrix, printRtlTable } from "../../../../lib/tableExport";
 import {
   firstRelation,
   formatNumeric,
@@ -20,19 +20,20 @@ const APPROVED_BUDGETS_EXPORT_HEADERS = [
   "حالة السنة",
 ] as const;
 
-function exportApprovedBudgetsToExcelCsv(
+function exportApprovedBudgetsToXlsx(
   rows: ApprovedBudgetsWithRelations[],
 ): void {
-  downloadUtf8Csv(
-    "approved_budgets.csv",
-    [...APPROVED_BUDGETS_EXPORT_HEADERS],
-    rows.map((row) => [
+  downloadXlsxFromMatrix({
+    filename: "approved_budgets.xlsx",
+    sheetName: "الموازنات المعتمدة",
+    headers: [...APPROVED_BUDGETS_EXPORT_HEADERS],
+    rows: rows.map((row) => [
       textOrDash(firstRelation(row.years)?.year_num),
       formatNumeric(row.approved_budget_amount),
       textOrDash(row.notes),
       firstRelation(row.years)?.status ? "نشطة" : "غير نشطة",
     ]),
-  );
+  });
 }
 
 function printApprovedBudgetsTable(rows: ApprovedBudgetsWithRelations[]): void {
@@ -124,7 +125,7 @@ function Toolbar({
         <button
           type="button"
           className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={() => exportApprovedBudgetsToExcelCsv(rows)}
+          onClick={() => exportApprovedBudgetsToXlsx(rows)}
           disabled={rows.length === 0}
         >
           تصدير Excel

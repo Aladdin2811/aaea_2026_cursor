@@ -1,3 +1,7 @@
+/**
+ * تجميع مسارات التطبيق المحمية. عند إضافة مسار جديد: راجع تعليق «العقد» في
+ * `src/navigation/routePermissionRules.ts` (مسار، قائمة، صلاحية، RLS، API).
+ */
 import type { RouteObject } from "react-router-dom";
 import { lazyNamed } from "../lazyRoute";
 import { accessDeniedRoute } from "./accessDeniedRoute";

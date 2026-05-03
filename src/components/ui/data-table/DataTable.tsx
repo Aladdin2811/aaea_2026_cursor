@@ -204,7 +204,10 @@ export function DataTable<T>({
 
   const tableEl: ReactNode = (
     <table
-      className={cx("w-full border-collapse text-slate-800", tableClassName)}
+      className={cx(
+        "w-full table-auto border-collapse text-slate-800",
+        tableClassName,
+      )}
       style={{ minWidth: minTableWidth }}
       aria-rowcount={sortedData.length + 1}
       aria-labelledby={typeof caption === "string" ? headingId : undefined}

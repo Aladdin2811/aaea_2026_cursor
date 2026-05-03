@@ -7,6 +7,10 @@ import { useFetchCurrentYear } from "../features/years/currentYear/useCurrentYea
 import { useFetchNo3Sum } from "../features/accounts/no3/useNo3";
 import { useFetchBabExpensesSum } from "../features/accounts/bab/useBab";
 import { useFetchBabBudget } from "../features/financialManagement/budgets/budgets/useBudgets";
+import DashboardBabBudgetBarChart, {
+  type BabBudgetBarPoint,
+} from "../features/financialManagement/budgets/DashboardBabBudgetBarChart";
+import DashboardExchangeRatesChart from "../features/exchangeRates/DashboardExchangeRatesChart";
 import DecimalConverter from "../utils/DecimalConverter";
 
 type DashboardNumericQuery = {
@@ -237,6 +241,39 @@ export function DashboardPage() {
     currencyExchangeDifference,
     otherMiscResources,
   ] as const;
+
+  const babBudgetBarPoints: BabBudgetBarPoint[] = expenses.map((exp, i) => {
+    const budgetQ = expensesBabBudgetQueries[i];
+    const expQ = expensesBabExpensesSumQueries[i];
+    const rawName = exp.label.split("\n")[0]?.trim() ?? `الباب ${i + 1}`;
+    const name =
+      rawName.length > 28 ? `${rawName.slice(0, 26)}…` : rawName;
+    const commitment =
+      budgetQ != null &&
+      !budgetQ.isError &&
+      budgetQ.data != null &&
+      Number.isFinite(budgetQ.data)
+        ? budgetQ.data
+        : 0;
+    const spent =
+      expQ != null &&
+      !expQ.isError &&
+      expQ.data != null &&
+      Number.isFinite(expQ.data)
+        ? expQ.data
+        : 0;
+    return { name, commitment, spent };
+  });
+
+  const babBarLoading =
+    selectedFinancialYearId != null &&
+    (expensesBabBudgetQueries.some((q) => q.isLoading) ||
+      expensesBabExpensesSumQueries.some((q) => q.isLoading));
+
+  const babBarError =
+    selectedFinancialYearId != null &&
+    (expensesBabBudgetQueries.some((q) => q.isError) ||
+      expensesBabExpensesSumQueries.some((q) => q.isError));
 
   return (
     <div className="space-y-8">
@@ -477,6 +514,23 @@ export function DashboardPage() {
             );
           })}
         </section>
+
+        <div className="mt-4">
+          <DashboardBabBudgetBarChart
+            yearId={selectedFinancialYearId}
+            points={babBudgetBarPoints}
+            isLoading={babBarLoading}
+            hasError={babBarError}
+          />
+        </div>
+
+        <hr className="my-6 h-0.5 w-full shrink-0 border-0 bg-emerald-200" />
+
+        <span className="block min-w-0 underline text-lg font-bold text-slate-900">
+          سعر الصرف مقابل الدينار التونسي
+        </span>
+
+        <DashboardExchangeRatesChart yearId={selectedFinancialYearId} />
 
         <hr className="my-6 h-0.5 w-full shrink-0 border-0 bg-emerald-200" />
       </div>

@@ -331,6 +331,36 @@ export type GetBabBudgetRpcArgs = {
   bab_id: number;
 };
 
+/** صف واحد من دالة `get_modified_budgets` في Postgres. */
+export type ModifiedBudgetRow = {
+  code: string | null;
+  band_name: string | null;
+  no3_name: string | null;
+  detailed_name: string | null;
+  budget_amount: string | number | null;
+  transfer_to: string | number | null;
+  transfer_from: string | number | null;
+  increase_budget: string | number | null;
+  modified_budget: string | number | null;
+};
+
+/**
+ * استدعاء دالة Postgres `get_modified_budgets(p_year_id, p_bab_id)` عبر PostgREST.
+ */
+export async function getModifiedBudgets(
+  rpcArgs: GetBabBudgetRpcArgs,
+): Promise<ModifiedBudgetRow[]> {
+  const { data, error } = await supabase.rpc("get_modified_budgets", {
+    p_year_id: rpcArgs.year_id,
+    p_bab_id: rpcArgs.bab_id,
+  });
+  if (error) {
+    console.error("Supabase get_modified_budgets:", error);
+    throw new Error(error.message || "تعذر جلب الإعتمادات المعدّلة");
+  }
+  return (data as unknown as ModifiedBudgetRow[] | null) ?? [];
+}
+
 /**
  * استدعاء دالة Postgres `get_bab_budget(p_year_id, p_bab_id)` عبر PostgREST.
  */
